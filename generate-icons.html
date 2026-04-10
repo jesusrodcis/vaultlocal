@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>VaultLocal — Generate Icons</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 500px; margin: 60px auto; padding: 1rem; }
+  h1 { font-size: 18px; margin-bottom: 8px; }
+  p { font-size: 13px; color: #666; margin-bottom: 24px; }
+  canvas { display: none; }
+  .previews { display: flex; gap: 24px; align-items: flex-end; margin-bottom: 24px; }
+  .preview { text-align: center; font-size: 11px; color: #888; }
+  .preview img { display: block; border-radius: 22%; border: 1px solid #ddd; }
+  button { padding: 10px 20px; background: #04342C; color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
+  button:hover { background: #0F6E56; }
+</style>
+</head>
+<body>
+<h1>VaultLocal Icon Generator</h1>
+<p>Click the button below to generate and download the two icon PNGs needed for the PWA manifest. Save them into an <code>icons/</code> folder alongside the app.</p>
+
+<div class="previews">
+  <div class="preview">
+    <img id="prev-192" width="64" height="64"/>
+    <div>icon-192.png</div>
+  </div>
+  <div class="preview">
+    <img id="prev-512" width="96" height="96"/>
+    <div>icon-512.png</div>
+  </div>
+</div>
+
+<button onclick="generateAndDownload()">Generate &amp; Download Icons</button>
+
+<canvas id="canvas"></canvas>
+
+<script>
+const SVG_TEMPLATE = (size) => {
+  const scale = size / 28;
+  const r = Math.round(6 * scale);
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 28 28" fill="none">
+  <rect width="28" height="28" rx="6" fill="#04342C"/>
+  <rect x="4" y="12" width="20" height="14" rx="3" stroke="#5DCAA5" stroke-width="1.5"/>
+  <path d="M9 12V9a5 5 0 0110 0v3" stroke="#5DCAA5" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="14" cy="19" r="2.5" fill="#5DCAA5"/>
+</svg>`;
+};
+
+function renderIcon(size) {
+  return new Promise(resolve => {
+    const canvas = document.getElementById('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    const svg = SVG_TEMPLATE(size);
+    const blob = new Blob([svg], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      ctx.clearRect(0, 0, size, size);
+      ctx.drawImage(img, 0, 0, size, size);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.src = url;
+  });
+}
+
+function download(dataUrl, filename) {
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = filename;
+  a.click();
+}
+
+async function generateAndDownload() {
+  const [png192, png512] = await Promise.all([renderIcon(192), renderIcon(512)]);
+
+  document.getElementById('prev-192').src = png192;
+  document.getElementById('prev-512').src = png512;
+
+  download(png192, 'icon-192.png');
+  download(png512, 'icon-512.png');
+}
+
+// Show previews on load
+window.onload = async () => {
+  const [png192, png512] = await Promise.all([renderIcon(192), renderIcon(512)]);
+  document.getElementById('prev-192').src = png192;
+  document.getElementById('prev-512').src = png512;
+};
+</script>
+</body>
+</html>
