@@ -1089,6 +1089,10 @@ input[type=range]{flex:1;height:4px;cursor:pointer;}
             <button onclick="findAndRemoveDuplicates()" style="font-size:11px;color:var(--teal2);background:var(--teal5);border:1px solid var(--teal6);border-radius:var(--rad);padding:5px 10px;cursor:pointer;">Scan</button>
           </div>
           <div class="setting-row">
+            <div><div class="setting-label" style="color:var(--amber)">Delete transactions only</div><div class="setting-sub">Wipes transactions &amp; uploads but keeps DDs, debts, rules, balances &amp; salary dates (no re-import needed)</div></div>
+            <button onclick="deleteTransactionsOnly()" style="font-size:11px;color:var(--amber);background:#FAEEDA;border:1px solid #FAC775;border-radius:var(--rad);padding:5px 10px;cursor:pointer;">Delete txns</button>
+          </div>
+          <div class="setting-row">
             <div><div class="setting-label" style="color:var(--red)">Clear all data</div><div class="setting-sub">Deletes all transactions, uploads, DDs and balances</div></div>
             <button onclick="clearAllData()" style="font-size:11px;color:var(--red);background:#FCEBEB;border:1px solid #F09595;border-radius:var(--rad);padding:5px 10px;cursor:pointer;">Clear</button>
           </div>
@@ -3330,6 +3334,14 @@ async function clearAllData(){
   USER_RULES=[];
   await refreshAll();
   alert('All data cleared.');
+}
+
+async function deleteTransactionsOnly(){
+  if(!confirm('Delete all transactions and upload history?\n\nYour DDs, debts, categorisation rules, balances and salary dates will be KEPT — no re-import needed.\n\nContinue?'))return;
+  await dbClear('transactions');
+  await dbClear('uploads');
+  await refreshAll();
+  alert('Transactions and uploads cleared. DDs, rules, balances and settings preserved.\n\nRe-upload your statements to repopulate transactions.');
 }
 
 async function findAndRemoveDuplicates(){
