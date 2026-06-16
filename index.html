@@ -1535,6 +1535,9 @@ function parsePtsbRows(rowArrays){
   const dOut=colOut>=0?colOut:4;
   const dBal=colBal>=0?colBal:6;
 
+  // Carry-down: PTSB prints the date once per date-group; rows below have blank date cells.
+  // We inherit the last seen date so grouped transactions aren't dropped or mis-dated.
+  let lastDate='';
   for(let i=headerIdx+1;i<rowArrays.length;i++){
     const raw=rowArrays[i];
     if(!raw||!raw.length)continue;
@@ -1542,9 +1545,9 @@ function parsePtsbRows(rowArrays){
     const p=[];
     const needed=Math.max(dDate,dDesc,dIn,dOut,dBal)+1;
     for(let j=0;j<needed;j++) p.push(String(raw[j]===null||raw[j]===undefined?'':raw[j]).trim());
-    const dateStr=p[dDate]||'';
-    if(!dateStr)continue;
-    const date=parseDate(dateStr);
+    const rawDateStr=p[dDate]||'';
+    if(rawDateStr){ const pd=parseDate(rawDateStr); if(pd) lastDate=pd; }
+    const date=lastDate;
     if(!date)continue;
     const desc=p[dDesc]||'';
     if(!desc)continue;
@@ -1595,6 +1598,10 @@ function parseBoiRows(rowArrays){
   if(colCredit<0)colCredit=3;
   if(colBalance<0)colBalance=4;
 
+  // Carry-down: BoI prints the date once per date-group (on the first/top row);
+  // subsequent rows in the same group have blank date AND blank balance cells.
+  // Inherit the last seen date so grouped transactions aren't dropped or mis-dated.
+  let lastBoiDate='';
   for(let i=headerIdx+1;i<rowArrays.length;i++){
     const raw=rowArrays[i];
     if(!raw||!raw.length)continue;
@@ -1603,9 +1610,9 @@ function parseBoiRows(rowArrays){
     for(let j=0;j<=Math.max(colDate,colDetails,colDebit,colCredit,colBalance);j++){
       p.push(String(raw[j]===null||raw[j]===undefined?'':raw[j]).trim());
     }
-    const dateStr=p[colDate]||'';
-    if(!dateStr)continue;
-    const date=parseDate(dateStr);
+    const rawDateStr=p[colDate]||'';
+    if(rawDateStr){ const pd=parseDate(rawDateStr); if(pd) lastBoiDate=pd; }
+    const date=lastBoiDate;
     if(!date)continue;
     const desc=p[colDetails]||'';
     if(!desc)continue;
