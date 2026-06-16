@@ -3929,8 +3929,7 @@ async function classifyDDs(dds, txns){
     // Safe-to-spend logic:
     // Pre-salary:  only deduct pre-payday DDs (post-payday DDs will be covered by incoming salary)
     // Post-salary: deduct ALL unpaid DDs in the period — salary is already in the balance
-    const countsAgainstBalance = !paid && !isPaused && dueThisMonth &&
-      (salaryEffectivelyHere || !isPostPayday);
+    const countsAgainstBalance = !paid && !isPaused && dueThisMonth && !isPostPayday;
 
     return {
       ...dd,
