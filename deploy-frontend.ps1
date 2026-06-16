@@ -38,12 +38,13 @@ Write-Host "  AWS Account: $AccountId (profile: $Profile)" -ForegroundColor Gree
 # ---------------------------------------------------------------
 # 1. Upload static files to S3
 # ---------------------------------------------------------------
-Write-Host "  Uploading site files from $SrcDir ..." -ForegroundColor Yellow
-aws s3 cp "$SrcDir\index.html"    "s3://$BucketName/index.html"    --content-type "text/html; charset=utf-8"             --region $Region --profile $Profile | Out-Null
-aws s3 cp "$SrcDir\manifest.json" "s3://$BucketName/manifest.json" --content-type "application/json; charset=utf-8"       --region $Region --profile $Profile 2>$null | Out-Null
-aws s3 cp "$SrcDir\sw.js"         "s3://$BucketName/sw.js"         --content-type "application/javascript; charset=utf-8" --region $Region --profile $Profile 2>$null | Out-Null
-aws s3 cp "$SrcDir\ai-tools.js"    "s3://$BucketName/ai-tools.js"    --content-type "application/javascript; charset=utf-8" --region $Region --profile $Profile | Out-Null
-Write-Host "  Files uploaded (index.html, manifest.json, sw.js, ai-tools.js)." -ForegroundColor Green
+Write-Host "  Uploading site files from $SrcDir (no-cache headers, dev mode) ..." -ForegroundColor Yellow
+$NoCache = "no-cache, no-store, must-revalidate"
+aws s3 cp "$SrcDir\index.html"    "s3://$BucketName/index.html"    --content-type "text/html; charset=utf-8"             --cache-control $NoCache --region $Region --profile $Profile | Out-Null
+aws s3 cp "$SrcDir\manifest.json" "s3://$BucketName/manifest.json" --content-type "application/json; charset=utf-8"       --cache-control $NoCache --region $Region --profile $Profile 2>$null | Out-Null
+aws s3 cp "$SrcDir\sw.js"         "s3://$BucketName/sw.js"         --content-type "application/javascript; charset=utf-8" --cache-control $NoCache --region $Region --profile $Profile 2>$null | Out-Null
+aws s3 cp "$SrcDir\ai-tools.js"    "s3://$BucketName/ai-tools.js"    --content-type "application/javascript; charset=utf-8" --cache-control $NoCache --region $Region --profile $Profile | Out-Null
+Write-Host "  Files uploaded with no-cache (index.html, manifest.json, sw.js, ai-tools.js)." -ForegroundColor Green
 
 # ---------------------------------------------------------------
 # 2. Invalidate CloudFront cache so changes go live immediately
