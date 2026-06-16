@@ -7,10 +7,14 @@ const AI_TOOLS=[
  {name:"get_debts",description:"Loans and credit cards.",input_schema:{type:"object",properties:{}}},
  {name:"get_savable_this_period",description:"Savable before payday with pro-rated variable reality-check.",input_schema:{type:"object",properties:{}}},
  {name:"get_spending_by_category",description:"Spend per category over N months.",input_schema:{type:"object",properties:{months:{type:"number"}}}},
- {name:"search_transactions",description:"Search transactions by keyword.",input_schema:{type:"object",properties:{query:{type:"string"},months:{type:"number"}},required:["query"]}},
+ {name:"search_transactions",description:"Search transactions by keyword and/or time window. Optional: period ('current'|'last'|'last3', uses salary dates from settings for exact payday-to-payday boundaries), startDate/endDate ('YYYY-MM-DD' explicit range), bank ('ptsb'|'boi'|'revolut'). Filters on transaction date only. Returns the resolved periodStart/periodEnd so you can state the exact window searched.",input_schema:{type:"object",properties:{query:{type:"string"},months:{type:"number"},period:{type:"string"},startDate:{type:"string"},endDate:{type:"string"},bank:{type:"string"}}}},
+ {name:"find_recurring_charges",description:"Detects recurring charges over the last 3 pay periods by fuzzy-grouping merchant names (strips POS/DD prefixes, dates, case). Flags items appearing in >=2 of 3 periods with similar amount (+-20%) and day (+-5d). Cross-checks against the DD schedule. Use for 'recurring charges not in my DD schedule', 'typical DDs', or 'what bills repeat'. The key output is notInSchedule: recurring charges NOT yet tracked as DDs.",input_schema:{type:"object",properties:{}}},
  {name:"get_goals",description:"Savings goals.",input_schema:{type:"object",properties:{}}}
 ];
 function _prePaydayDDs(dds){return dds.filter(d=>d.dueThisMonth&&!d.paid&&!d._paused&&!d.isPostPayday);}
+function _salaryDates(){try{return (getSalaryDates&&getSalaryDates())||[];}catch(e){return[];}}
+function _periodWindow(which){const sd=_salaryDates().slice().sort();const today=new Date().toISOString().slice(0,10);let idx=-1;for(let i=0;i<sd.length;i++){if(sd[i]<=today)idx=i;}/*idx=last payday on/before today=start of current period*/if(idx<0)return null;if(which==="current"){return{start:sd[idx],end:sd[idx+1]||null};}if(which==="last"){return{start:sd[idx-1]||null,end:sd[idx]};}if(which==="last3"){return{start:sd[Math.max(0,idx-3)]||null,end:sd[idx]};}return null;}
+function _normMerchant(s){return (s||"").toLowerCase().replace(/\bpos\b|\bdd\b|\bso\b|\bvisa\b|\bsepa\b/g,"").replace(/\d{1,2}[\/-]\d{1,2}([\/-]\d{2,4})?/g,"").replace(/\d{2,}/g,"").replace(/[^a-z ]/g," ").replace(/\s+/g," ").trim().slice(0,18);}
 function _postPaydayDDs(dds){return dds.filter(d=>d.dueThisMonth&&!d._paused&&d.isPostPayday);}
 function _pausedDDs(dds){return dds.filter(d=>d.dueThisMonth&&!d.paid&&d._paused);}
 async function runAITool(name,input){input=input||{};try{
