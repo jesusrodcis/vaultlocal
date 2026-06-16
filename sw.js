@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vault-v1';
+const CACHE_NAME = 'vault-v2';
 
 // Assets to pre-cache on install
 const PRECACHE_URLS = [
@@ -50,17 +50,15 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // App shell: stale-while-revalidate (instant load, updates in background)
+  // App shell: NETWORK-FIRST (always serve fresh deploy; fall back to cache only when offline)
   if (event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html')) {
     event.respondWith(
-      caches.open(CACHE_NAME).then(cache =>
-        cache.match(event.request).then(cached => {
-          const fetchPromise = fetch(event.request).then(response => {
-            cache.put(event.request, response.clone());
-            return response;
-          });
-          return cached || fetchPromise;
-        })
+      fetch(event.request).then(response => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        return response;
+      }).catch(() =>
+        caches.open(CACHE_NAME).then(cache => cache.match(event.request))
       )
     );
     return;
