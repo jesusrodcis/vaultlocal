@@ -3968,24 +3968,29 @@ async function renderDDPanel(txns){
   const balances = await getAllBalances();
   const totalBal = Object.values(balances).reduce((a,b) => a + (parseFloat(b)||0), 0);
   if(billsEl){
-    const pending=classified.filter(d=>!d.paid && !d._paused && d.dueThisMonth).sort((a,b)=>a.dayOfMonth-b.dayOfMonth);
-    
-    // Pending summary = ALL unpaid DDs in period (full real exposure)
+    // THREE GROUPS (option A):
+    //  1. before-payday & unpaid & not paused  -> counts against safe-to-spend
+    //  2. paused & unpaid                      -> shown greyed, not counted
+    //  3. post-payday & unpaid & not paused     -> covered by next salary (next period)
+    const beforePayday = classified.filter(d=>!d.paid && !d._paused && d.dueThisMonth && !d.isPostPayday).sort((a,b)=>a.dayOfMonth-b.dayOfMonth);
+    const pausedList   = classified.filter(d=>!d.paid && d._paused && d.dueThisMonth).sort((a,b)=>a.dayOfMonth-b.dayOfMonth);
+    const nextSalary   = classified.filter(d=>!d.paid && !d._paused && d.dueThisMonth && d.isPostPayday).sort((a,b)=>a.dayOfMonth-b.dayOfMonth);
+    const pending = beforePayday; // legacy name reused below for paid-list check
+
+    // Pending summary = before-payday total (the figure that actually reduces safe-to-spend)
     const pendingSummaryEl = document.getElementById('pending-summary');
     if(pendingSummaryEl){
-      const pendingTotal = pending.reduce((sum,d)=>sum+d.amount,0);
+      const pendingTotal = beforePayday.reduce((sum,d)=>sum+d.amount,0);
       pendingSummaryEl.textContent = pendingTotal>0 ? `€${pendingTotal.toFixed(2)}` : '€0.00';
     }
-    
-    // All unpaid DDs — show ALL, pending summary = full total
-    const pendingTotal = pending.reduce((s,d)=>s+d.amount,0);
+
     const paidList = classified.filter(d=>d.paid&&d.dueThisMonth).sort((a,b)=>a.dayOfMonth-b.dayOfMonth);
 
-    if(!pending.length && !paidList.length){
+    if(!beforePayday.length && !pausedList.length && !nextSalary.length && !paidList.length){
       billsEl.innerHTML='<div style="font-size:12px;color:var(--teal6);">No DDs due this period ✓</div>';
     } else {
-      // Pending rows — no strikethrough, just clear status tags
-      const pendingRows = pending.map(d=>{
+      // Pending (before-payday) rows — no strikethrough, just clear status tags
+      const pendingRows = beforePayday.map(d=>{
         const urgency = d.daysUntil <= 1; // today or tomorrow
         const dayLabel = d.daysUntil===0 ? 'today'
                        : d.daysUntil===1 ? 'tomorrow'
@@ -4002,6 +4007,30 @@ async function renderDDPanel(txns){
         </div>`;
       }).join('');
 
+      // Paused DDs — greyed, not counted
+      const pausedRows = pausedList.length
+        ? '<div style="font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase;margin:6px 0 3px;padding-top:6px;border-top:1px solid var(--border);">Paused — not counted</div>'
+          + pausedList.map(d=>
+            `<div class="bill-row" style="opacity:0.5;">
+              <span class="bill-name" style="font-size:11px;flex:1;">${d.name.slice(0,20)}</span>
+              <span style="font-size:9px;color:var(--text3);margin:0 4px;">won't debit</span>
+              <span class="bill-amt" style="font-size:11px;">€${d.amount.toFixed(2)}</span>
+            </div>`
+          ).join('')
+        : '';
+
+      // Covered by next salary (post-payday — next period) — greyed sub-section (option A)
+      const nextSalaryRows = nextSalary.length
+        ? '<div style="font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase;margin:6px 0 3px;padding-top:6px;border-top:1px solid var(--border);">Covered by next salary</div>'
+          + nextSalary.map(d=>
+            `<div class="bill-row" style="opacity:0.55;">
+              <span class="bill-name" style="font-size:11px;flex:1;">${d.name.slice(0,20)}</span>
+              <span style="font-size:9px;color:var(--teal4);margin:0 4px;">${d.dayOfMonth}${ordinal(d.dayOfMonth)} · next period</span>
+              <span class="bill-amt" style="font-size:11px;">€${d.amount.toFixed(2)}</span>
+            </div>`
+          ).join('')
+        : '';
+
       // Paid DDs — greyed at bottom
       const paidRows = paidList.length
         ? '<div style="font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase;margin:6px 0 3px;padding-top:6px;border-top:1px solid var(--border);">Paid</div>'
@@ -4014,7 +4043,7 @@ async function renderDDPanel(txns){
           ).join('')
         : '';
 
-      billsEl.innerHTML = pendingRows + paidRows;
+      billsEl.innerHTML = pendingRows + pausedRows + nextSalaryRows + paidRows;
     }
   }
 
@@ -4028,17 +4057,17 @@ async function renderDDPanel(txns){
       if(safeSubEl) safeSubEl.textContent='Add account balances to calculate';
     } else {
       safeEl.textContent=`€${safe.toFixed(2)}`;
-      // Build a helpful subtitle explaining what was deducted
-      const allPending = classified.filter(d => !d.paid && !d._paused && d.dueThisMonth);
+      // Subtitle uses ONLY before-payday DDs (the figure actually deducted from safe-to-spend)
+      const counted = classified.filter(d => d.countsAgainstBalance);
       const salaryHere = classified[0]?.salaryEffectivelyHere;
       const payday     = classified[0]?.payday;
       let sub = '';
-      if(allPending.length){
-        const pendingSum = allPending.reduce((a,d)=>a+d.amount,0);
-        sub = `After ${allPending.length} pending DD${allPending.length!==1?'s':''} (€${pendingSum.toFixed(2)})`;
+      if(counted.length){
+        const countedSum = counted.reduce((a,d)=>a+d.amount,0);
+        sub = `After ${counted.length} DD${counted.length!==1?'s':''} before payday (€${countedSum.toFixed(2)})`;
         if(!salaryHere && payday) sub += ` · Salary expected ${payday}${ordinal(payday)}`;
       } else {
-        sub = 'All DDs paid this period ✓';
+        sub = 'All pre-payday DDs cleared ✓';
       }
       if(safeSubEl) safeSubEl.textContent=sub;
     }
