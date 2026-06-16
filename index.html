@@ -6818,11 +6818,21 @@ async function renderBudgetCheck(){
 
   const ddRows = committed.map(d => {
     const monthly = d.frequency===0 ? d.amount*52/12 : d.amount/(d.frequency||1);
-    const freqNote = d.frequency===0?`€${d.amount.toFixed(2)}/wk`:d.frequency>1?`€${d.amount.toFixed(2)} every ${d.frequency}mo`:'';
-    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);">
-      <span style="font-size:12px;color:var(--text2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.name.slice(0,30)}</span>
-      ${freqNote?`<span style="font-size:10px;color:var(--text3);margin:0 8px;">${freqNote}</span>`:''}
-      <span style="font-size:12px;font-weight:500;color:var(--red);flex-shrink:0;">−€${monthly.toFixed(0)}/mo</span>
+    const freqNote = d.frequency===0?`wk`:d.frequency>1?`/${d.frequency}mo`:'';
+    return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border);">
+      <input type="text" value="${escHtml(d.name)}" title="Click to rename this DD"
+        onchange="updateDD(${d.id},'name',this.value)"
+        style="flex:1;min-width:80px;padding:3px 6px;border:1px solid transparent;border-radius:4px;font-size:12px;background:transparent;color:var(--text2);cursor:pointer;overflow:hidden;text-overflow:ellipsis;"
+        onfocus="this.style.borderColor='var(--border)';this.style.background='var(--surface)'"
+        onblur="this.style.borderColor='transparent';this.style.background='transparent'"/>
+      <span style="font-size:11px;color:var(--text3);">€</span>
+      <input type="number" min="0" step="0.01" value="${d.amount.toFixed(2)}" title="Click to edit amount"
+        onchange="updateDD(${d.id},'amount',parseFloat(this.value)); recalcBudget();"
+        style="width:72px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--surface);text-align:right;"/>
+      <span style="font-size:10px;color:var(--text3);flex-shrink:0;width:30px;">${freqNote||'/mo'}</span>
+      <span style="font-size:11px;font-weight:500;color:var(--red);flex-shrink:0;width:52px;text-align:right;">−€${monthly.toFixed(0)}</span>
+      <button onclick="deleteDD(${d.id})" title="Remove this DD from the schedule"
+        style="font-size:11px;border:none;background:none;color:var(--text3);cursor:pointer;padding:0 2px;flex-shrink:0;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text3)'">✕</button>
     </div>`;
   }).join('');
 
