@@ -689,6 +689,29 @@ input[type=range]{flex:1;height:4px;cursor:pointer;}
           <button onclick="clearAllFilters()" style="font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--rad);background:var(--surface2);color:var(--text2);cursor:pointer;flex-shrink:0;">Clear filters</button>
           <span id="txn-count" style="font-size:12px;color:var(--text3);white-space:nowrap;"></span>
         </div>
+        <!-- Salary-period selector (mirrors Analytics) -->
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--rad-lg);padding:.7rem 1rem;margin-bottom:1rem;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);">
+            <input type="checkbox" id="txn-period-enabled" onchange="renderTransactions()"> Salary period:
+          </label>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <input type="number" id="txn-period-start-day" min="1" max="28" value="28"
+              style="width:44px;padding:3px 5px;border:1px solid var(--border);border-radius:var(--rad);font-size:13px;"
+              onchange="renderTransactions()"/>
+            <span style="font-size:12px;color:var(--text3);">→</span>
+            <input type="number" id="txn-period-end-day" min="1" max="31" value="27"
+              style="width:44px;padding:3px 5px;border:1px solid var(--border);border-radius:var(--rad);font-size:13px;"
+              onchange="renderTransactions()"/>
+            <span style="font-size:12px;color:var(--text3);">next month</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-left:auto;">
+            <button onclick="txnPeriodNav(-1)" style="padding:4px 10px;border:1px solid var(--border);border-radius:var(--rad);background:var(--surface2);cursor:pointer;">‹</button>
+            <span id="txn-period-label" style="font-size:13px;font-weight:500;min-width:180px;text-align:center;"></span>
+            <button onclick="txnPeriodNav(1)" style="padding:4px 10px;border:1px solid var(--border);border-radius:var(--rad);background:var(--surface2);cursor:pointer;">›</button>
+          </div>
+          <span id="txn-period-total" style="font-size:12px;color:var(--text2);font-weight:500;"></span>
+          <button onclick="askAIAboutTxnPeriod()" style="padding:5px 12px;border:1px solid var(--teal6);border-radius:var(--rad);background:var(--teal5);color:var(--teal2);font-size:12px;cursor:pointer;">Ask AI ↗</button>
+        </div>
         <div id="txn-table-wrap"></div>
       </div>
     </div>
@@ -2063,6 +2086,26 @@ function clearAllFilters(){
   renderTransactions();
 }
 
+// ── Transactions-page salary-period selector state ──
+let txnPeriodOffset = 0;
+async function txnPeriodNav(dir){
+  // Auto-enable the period filter when navigating
+  const cb = document.getElementById('txn-period-enabled');
+  if(cb && !cb.checked) cb.checked = true;
+  txnPeriodOffset += dir;
+  if(txnPeriodOffset > 0) txnPeriodOffset = 0; // can't go into the future
+  await renderTransactions();
+}
+async function askAIAboutTxnPeriod(){
+  const p = window._txnActivePeriod;
+  if(!p){ alert('Enable the salary-period filter first, then pick a period.'); return; }
+  const bankF = document.getElementById('txn-filter-bank')?.value || '';
+  const bankTxt = bankF ? bankF.toUpperCase()+' ' : '';
+  const q = `Summarise my ${bankTxt}transactions from ${p.start} to ${p.end} — total spend, top categories, and anything unusual.`;
+  showPage('ai', document.querySelector('.nav-btn:nth-child(4)'));
+  setTimeout(()=>aiAsk(q), 100);
+}
+
 async function renderTransactions(){
   const all=await dbGetAll('transactions');
   const bankF=document.getElementById('txn-filter-bank')?.value||'';
@@ -2079,11 +2122,32 @@ async function renderTransactions(){
   const amtMax = parseFloat(document.getElementById('txn-amt-max')?.value);
   if(!isNaN(amtMin) && amtMin > 0) rows = rows.filter(r => (r.amount||0) >= amtMin);
   if(!isNaN(amtMax) && amtMax > 0) rows = rows.filter(r => (r.amount||0) <= amtMax);
+  // Salary-period filter (Analytics-style selector on the Transactions page)
+  const periodEnabled = document.getElementById('txn-period-enabled')?.checked;
+  const periodTotalEl = document.getElementById('txn-period-total');
+  const periodLabelEl = document.getElementById('txn-period-label');
+  if(periodEnabled){
+    const range = await getPeriodRange(txnPeriodOffset);
+    const sStr = range.periodStart.toISOString().slice(0,10);
+    const eStr = range.periodEnd.toISOString().slice(0,10);
+    rows = rows.filter(r => r.date && r.date >= sStr && r.date < eStr);
+    if(periodLabelEl) periodLabelEl.textContent = periodLabel(range);
+    window._txnActivePeriod = {start:sStr, end:eStr};
+  } else {
+    if(periodLabelEl) periodLabelEl.textContent = '';
+    if(periodTotalEl) periodTotalEl.textContent = '';
+    window._txnActivePeriod = null;
+  }
   // Period filter (set when clicking from analytics)
   if(window._txnPeriodFrom) rows=rows.filter(r=>r.date>=window._txnPeriodFrom);
   if(window._txnPeriodTo)   rows=rows.filter(r=>r.date<=window._txnPeriodTo);
   rows.sort((a,b)=>{ const da=a.date||'',db=b.date||''; return db>da?1:db<da?-1:0; });
   document.getElementById('txn-count').textContent=`${rows.length} transactions`;
+  // Show period spend total (excludes credits + internal) when period filter active
+  if(periodEnabled && periodTotalEl){
+    const spend = rows.filter(r=>!r.isCredit && !r.isInternal).reduce((a,r)=>a+(r.amount||0),0);
+    periodTotalEl.textContent = `Spend: €${spend.toFixed(2)}`;
+  }
   const wrap=document.getElementById('txn-table-wrap');
   if(!rows.length){wrap.innerHTML='<div class="empty-state">No transactions match filters.</div>';return;}
   wrap.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rad-lg);padding:.75rem 1rem;">`+
