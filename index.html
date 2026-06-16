@@ -1523,18 +1523,20 @@ function parsePtsbRows(rowArrays){
   const colDesc=hdr.findIndex(c=>c.includes('description'));
   const colIn=hdr.findIndex(c=>c.includes('money in')||c.includes('credit')||c.includes('in'));
   const colOut=hdr.findIndex(c=>c.includes('money out')||c.includes('debit')||c.includes('out'));
+  const colBal=hdr.findIndex(c=>c.includes('balance'));
   // If header-based detection fails, fall back to fixed PTSB positions
   const dDate=colDate>=0?colDate:0;
   const dDesc=colDesc>=0?colDesc:2;
   const dIn=colIn>=0?colIn:3;
   const dOut=colOut>=0?colOut:4;
+  const dBal=colBal>=0?colBal:6;
 
   for(let i=headerIdx+1;i<rowArrays.length;i++){
     const raw=rowArrays[i];
     if(!raw||!raw.length)continue;
     // Pad row
     const p=[];
-    const needed=Math.max(dDate,dDesc,dIn,dOut)+1;
+    const needed=Math.max(dDate,dDesc,dIn,dOut,dBal)+1;
     for(let j=0;j<needed;j++) p.push(String(raw[j]===null||raw[j]===undefined?'':raw[j]).trim());
     const dateStr=p[dDate]||'';
     if(!dateStr)continue;
@@ -1552,7 +1554,10 @@ function parsePtsbRows(rowArrays){
     // (BOI pays the mortgage and PTSB current account shows the receipt — not real income)
     const isInternalCredit = isCredit && /\bmortgage\b/i.test(dl);
     const isInternal=isInternalCredit||(!isCredit&&PTSB_DEDUP_OUT.some(d=>dl.includes(d)));
-    rows.push({date,description:desc,amount,isCredit,isInternal,
+    // Capture running balance if present on this row (PTSB prints it once per date-group)
+    const balStr=(p[dBal]||'').replace(/[€,\s]/g,'');
+    const balanceAfter=balStr!==''&&!isNaN(parseFloat(balStr))?parseFloat(balStr):null;
+    rows.push({date,description:desc,amount,isCredit,isInternal,balanceAfter,
       category:isInternal?'Internal':categorise(desc, amount, isInternal),bank:'ptsb'});
   }
 
@@ -1565,7 +1570,7 @@ function parseBoiRows(rowArrays){
   const rows=[];
   // Find header row and map column names to indices
   let headerIdx=0;
-  let colDate=-1,colDetails=-1,colDebit=-1,colCredit=-1;
+  let colDate=-1,colDetails=-1,colDebit=-1,colCredit=-1,colBalance=-1;
   for(let i=0;i<rowArrays.length;i++){
     const cells=rowArrays[i].map(c=>String(c||'').toLowerCase().trim());
     if(cells.includes('date')){
@@ -1575,6 +1580,7 @@ function parseBoiRows(rowArrays){
       colDetails=cells.findIndex(c=>c==='details'||c==='description'||c==='narrative');
       colDebit=cells.findIndex(c=>c==='debit'||c==='debit amount'||c==='withdrawals');
       colCredit=cells.findIndex(c=>c==='credit'||c==='credit amount'||c==='deposits');
+      colBalance=cells.findIndex(c=>c==='balance'||c==='balance amount');
       break;
     }
   }
@@ -1583,13 +1589,14 @@ function parseBoiRows(rowArrays){
   if(colDetails<0)colDetails=1;
   if(colDebit<0)colDebit=2;
   if(colCredit<0)colCredit=3;
+  if(colBalance<0)colBalance=4;
 
   for(let i=headerIdx+1;i<rowArrays.length;i++){
     const raw=rowArrays[i];
     if(!raw||!raw.length)continue;
     // Pad the row so no index is out of bounds
     const p=[];
-    for(let j=0;j<=Math.max(colDate,colDetails,colDebit,colCredit);j++){
+    for(let j=0;j<=Math.max(colDate,colDetails,colDebit,colCredit,colBalance);j++){
       p.push(String(raw[j]===null||raw[j]===undefined?'':raw[j]).trim());
     }
     const dateStr=p[colDate]||'';
@@ -1609,7 +1616,10 @@ function parseBoiRows(rowArrays){
     const amount=isCredit?credit:debit;
     const dl=desc.toLowerCase();
     const isInternal=BOI_DEDUP.some(d=>dl.includes(d));
-    rows.push({date,description:desc,amount,isCredit,isInternal,
+    // BoI prints the running balance only on the last (bottom) row of each date-group
+    const balStr=(p[colBalance]||'').replace(/[€,\s]/g,'');
+    const balanceAfter=balStr!==''&&!isNaN(parseFloat(balStr))?parseFloat(balStr):null;
+    rows.push({date,description:desc,amount,isCredit,isInternal,balanceAfter,
       category:isInternal?'Internal':categorise(desc, amount, isInternal),bank:'boi'});
   }
   return rows;
@@ -1646,20 +1656,27 @@ const PARSERS={
     const lines=text.trim().split('\n');
     const hdr=parseCSV(lines[0]||'').map(h=>h.toLowerCase().trim());
     const iDate=hdr.findIndex(h=>h.includes('started'));
+    const iComplete=hdr.findIndex(h=>h.includes('completed'));
     const iDesc=hdr.indexOf('description');
     const iAmt=hdr.indexOf('amount');
     const iCurr=hdr.indexOf('currency');
     const iState=hdr.indexOf('state');
     const iType=hdr.indexOf('type');
+    const iProduct=hdr.indexOf('product');
+    const iBal=hdr.indexOf('balance');
     if(iAmt<0||iDesc<0)return rows;
     lines.slice(1).forEach(line=>{
       if(!line.trim())return;
       const p=parseCSV(line);
+      // Only import the Current account — skip Savings/pocket sub-account rows entirely
+      const product=iProduct>=0?(p[iProduct]||'').trim().toLowerCase():'current';
+      if(product&&product!=='current')return;
       const curr=iCurr>=0?(p[iCurr]||'').trim().toUpperCase():'EUR';
       if(curr&&curr!=='EUR')return;
       const state=iState>=0?(p[iState]||'').trim().toUpperCase():'COMPLETED';
       if(state&&state!=='COMPLETED')return;
-      const date=iDate>=0?parseDate(p[iDate]):'';
+      // Prefer Completed Date for chronological ordering/balance accuracy
+      const date=iComplete>=0?parseDate(p[iComplete]):(iDate>=0?parseDate(p[iDate]):'');
       const desc=(iDesc>=0?p[iDesc]:'').trim();
       const amt=parseFloat((iAmt>=0?p[iAmt]:'0').replace(/[€,]/g,''))||0;
       const type=iType>=0?(p[iType]||'').toLowerCase():'';
@@ -1668,7 +1685,9 @@ const PARSERS={
       const isCredit=amt>0;
       const amount=Math.abs(amt);
       if(amount===0)return;
-      rows.push({date,description:desc,amount,isCredit,isInternal,category:isInternal?'Internal':categorise(desc, amount, isInternal),bank:'revolut'});
+      const balStr=iBal>=0?(p[iBal]||'').replace(/[€,\s]/g,''):'';
+      const balanceAfter=balStr!==''&&!isNaN(parseFloat(balStr))?parseFloat(balStr):null;
+      rows.push({date,description:desc,amount,isCredit,isInternal,balanceAfter,category:isInternal?'Internal':categorise(desc, amount, isInternal),bank:'revolut'});
     });
     return rows;
   },
