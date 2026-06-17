@@ -729,7 +729,7 @@ input[type=range]{flex:1;height:4px;cursor:pointer;}
       <div class="ai-msgs" id="ai-msgs" style="flex:1;overflow-y:auto;">
         <div class="ai-msg"><div class="ai-avatar av-ai">AI</div><div class="ai-bubble bubble-ai">Hello! Your financial context is loaded. I can see your safe-to-spend, upcoming bills, and all balances. What would you like to know?</div></div>
       </div>
-      <div style="padding:.75rem 1.25rem;background:var(--surface2);border-top:1px solid var(--border);">
+      <div style="padding:.75rem 1.25rem;background:var(--surface2);border-top:1px solid var(--border);flex-shrink:0;padding-bottom:calc(.75rem + env(safe-area-inset-bottom));">
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.75rem;">
           <span class="badge b-green" style="cursor:pointer;padding:4px 10px;" onclick="aiAsk('Can I afford brunch tomorrow?')">Can I afford brunch tomorrow?</span>
           <span class="badge b-amber" style="cursor:pointer;padding:4px 10px;" onclick="aiAsk('What direct debits are still pending this month?')">Pending DDs this month?</span>
@@ -7443,6 +7443,35 @@ async function debugDDMatch(){
   console.log('\n→ Copy above and paste to the chat to diagnose');
 }
 window.debugDDMatch = debugDDMatch;
+
+// ═══════════════════════════════════════════════════
+// MOBILE: keep AI chat input above the on-screen keyboard
+// Sets --app-vh to the *visual* viewport height so the app shell
+// (which uses height:var(--app-vh)) shrinks when the keyboard opens,
+// keeping the sticky .ai-bar input visible instead of hidden behind it.
+// ═══════════════════════════════════════════════════
+(function(){
+  function setAppVH(){
+    var h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+    document.documentElement.style.setProperty('--app-vh', h + 'px');
+  }
+  setAppVH();
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize', setAppVH);
+    window.visualViewport.addEventListener('scroll', setAppVH);
+  }
+  window.addEventListener('resize', setAppVH);
+  window.addEventListener('orientationchange', function(){ setTimeout(setAppVH, 300); });
+  // When the chat input gains focus on mobile, scroll it into view above the keyboard
+  document.addEventListener('focusin', function(e){
+    if(e.target && e.target.id === 'ai-input'){
+      setTimeout(function(){
+        setAppVH();
+        try{ e.target.scrollIntoView({block:'center', behavior:'smooth'}); }catch(_){ }
+      }, 300);
+    }
+  });
+})();
 
 </script>
 <script src="ai-tools.js"></script>
