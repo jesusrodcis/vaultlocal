@@ -369,7 +369,7 @@ input[type=range]{flex:1;height:4px;cursor:pointer;}
       <div class="topbar-logo-mark">
         <svg viewBox="0 0 14 14" fill="none"><rect x="2" y="6" width="10" height="7" rx="1.5" stroke="#5DCAA5" stroke-width="1.2"/><path d="M4.5 6V4.5a2.5 2.5 0 015 0V6" stroke="#5DCAA5" stroke-width="1.2" stroke-linecap="round"/><circle cx="7" cy="9.5" r="1.2" fill="#5DCAA5"/></svg>
       </div>
-      VaultLocal <span style="font-size:9px;color:var(--text3);font-weight:400;margin-left:4px;">v3.1 · 2026-07-10 (b64-chunk-fix)</span>
+      VaultLocal <span style="font-size:9px;color:var(--text3);font-weight:400;margin-left:4px;">v3.2 · 2026-07-10 (savings-backup-restore)</span>
     </div>
     <div class="topbar-nav desktop-only">
       <button class="nav-btn active" onclick="showPage('dashboard',this)">Dashboard</button>
@@ -5534,12 +5534,13 @@ function filterDDTable(){
 // ═══════════════════════════════════════════════════
 
 async function exportBackup(){
-  const [dds, debts, rules, transferMaps, cats] = await Promise.all([
+  const [dds, debts, rules, transferMaps, cats, savings] = await Promise.all([
     dbGetAll('directDebits'),
     dbGetAll('debts'),
     dbGetAll('rules'),
     dbGetAll('transferMaps'),
-    dbGetAll('categories')
+    dbGetAll('categories'),
+    dbGetAll('savings')
   ]);
 
   // Gather localStorage settings
@@ -5575,6 +5576,9 @@ async function exportBackup(){
       dueDayOfMonth:d.dueDayOfMonth, currency:d.currency||'EUR',
       lastUpdated:d.lastUpdated
     })),
+    savings: savings.map(s=>({
+      name:s.name, balance:s.balance, target:s.target||0, lastUpdated:s.lastUpdated
+    })),
     settings,
     balances
   };
@@ -5588,14 +5592,15 @@ async function exportBackup(){
   URL.revokeObjectURL(url);
 
   const msg=document.getElementById('backup-msg');
-  if(msg) msg.textContent=`Backup exported: ${payload.directDebits.length} DDs, ${payload.debts.length} debts, balances + settings`;
+  if(msg) msg.textContent=`Backup exported: ${payload.directDebits.length} DDs, ${payload.debts.length} debts, ${payload.savings.length} savings, balances + settings`;
 }
+
 
 // Core backup restore logic — used by both importBackup and syncPull
 async function applyBackupPayload(payload){
   if(!payload.version){ throw new Error('Not a VaultLocal backup'); }
 
-  let ddCount=0, debtCount=0, ruleCount=0;
+  let ddCount=0, debtCount=0, ruleCount=0, savingsCount=0;
 
   if(Array.isArray(payload.directDebits)){
     const existing=await dbGetAll('directDebits');
@@ -5621,7 +5626,17 @@ async function applyBackupPayload(payload){
       debtCount++;
     }
   }
+  if(Array.isArray(payload.savings)&&payload.savings.length>0){
+    await dbClear('savings');
+    for(const s of payload.savings){
+      if(s.name){
+        await dbAdd('savings',{name:s.name,balance:parseFloat(s.balance)||0,target:parseFloat(s.target)||0,lastUpdated:s.lastUpdated||new Date().toISOString()});
+        savingsCount++;
+      }
+    }
+  }
   if(Array.isArray(payload.categories)&&payload.categories.length>0){
+
     for(const c of payload.categories){
       if(c.name&&!DEFAULT_CATEGORIES.includes(c.name))
         await dbPut('categories',{name:c.name,color:c.color||'',builtIn:false});
@@ -5652,7 +5667,7 @@ async function applyBackupPayload(payload){
 
   await refreshAll();
   await loadSettingsValues();
-  return {ddCount, debtCount, ruleCount};
+  return {ddCount, debtCount, ruleCount, savingsCount};
 }
 
 async function importBackup(input){
@@ -5688,6 +5703,18 @@ async function importBackup(input){
       for(const d of payload.debts){
         await dbAdd('debts',{...d,lastUpdated:d.lastUpdated||new Date().toISOString()});
         debtCount++;
+      }
+    }
+
+    // Restore savings — clear and re-seed
+    let savingsCount=0;
+    if(Array.isArray(payload.savings)&&payload.savings.length>0){
+      await dbClear('savings');
+      for(const s of payload.savings){
+        if(s.name){
+          await dbAdd('savings',{name:s.name,balance:parseFloat(s.balance)||0,target:parseFloat(s.target)||0,lastUpdated:s.lastUpdated||new Date().toISOString()});
+          savingsCount++;
+        }
       }
     }
 
@@ -5739,7 +5766,7 @@ async function importBackup(input){
     await refreshAll();
     await loadSettingsValues();
     input.value='';
-    if(msg) msg.textContent=`✓ Restored: ${ddCount} DDs, ${debtCount} debts, ${ruleCount} rules, balances and settings`;
+    if(msg) msg.textContent=`✓ Restored: ${ddCount} DDs, ${debtCount} debts, ${savingsCount} savings, ${ruleCount} rules, balances and settings`;
   }catch(err){
     if(msg) msg.textContent=`Import failed: ${err.message}`;
     console.error(err);
