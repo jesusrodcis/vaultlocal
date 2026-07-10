@@ -1,0 +1,35 @@
+# VaultLocal Project Rules
+
+## Versioning Policy (MANDATORY)
+
+Every time changes are pushed/deployed to production, the version indicator in the
+app topbar MUST be updated. This applies to ALL changes, regardless of size —
+minor fixes, major features, or full releases.
+
+**Location:** `index.html` — search for `VaultLocal <span` to find the version tag
+in the topbar. It currently looks like:
+
+```html
+VaultLocal <span style="font-size:9px;color:var(--text3);font-weight:400;margin-left:4px;">v3.1 · 2026-07-10 (b64-chunk-fix)</span>
+```
+
+**Format:** `vMAJOR.MINOR · YYYY-MM-DD (short-slug-describing-change)`
+
+**Rules for bumping the version number:**
+- **Patch/minor fix** (bug fix, small tweak, copy change): bump the MINOR number
+  (e.g. `v3.1` → `v3.2`).
+- **Major feature or breaking change** (new module, schema change, significant
+  UX rework): bump the MAJOR number and reset MINOR to 0 (e.g. `v3.2` → `v4.0`).
+- Always update the date to the current date.
+- Always update the slug to briefly describe the change just made (kebab-case,
+  short — e.g. `b64-chunk-fix`, `dd-delete-fix`, `sync-supabase`).
+
+**Workflow when deploying any change:**
+1. Make the code fix/feature change.
+2. Update the version `<span>` in the topbar in `index.html` (bump number, date,
+   slug) as described above.
+3. Deploy via `deploy-frontend.ps1` (uploads to S3 + invalidates CloudFront).
+4. Confirm the deploy log shows upload + invalidation succeeded.
+
+Do not skip step 2 — every deploy must be traceable to a visible version string
+in the running app.

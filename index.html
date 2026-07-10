@@ -13,7 +13,8 @@
   --red:#A32D2D;--amber:#BA7517;--blue:#185FA5;
   --rad:8px;--rad-lg:12px;
 }
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;}
+html,body{height:100%;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;overflow:hidden;}
 
 /* ── PIN LOCK ── */
 #pin-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;position:relative;z-index:9999;background:var(--bg);}
@@ -35,9 +36,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .pin-error{font-size:12px;color:var(--red);margin-top:1rem;min-height:18px;}
 
 /* ── APP SHELL ── */
-#app{display:none;height:var(--app-vh,100vh);overflow:hidden;flex-direction:column;}
+#app{display:none;height:var(--app-vh,100dvh);overflow:hidden;flex-direction:column;}
 #pages-wrap{min-height:0;}
-.topbar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1.25rem;gap:12px;flex-shrink:0;}
+.topbar{height:calc(52px + env(safe-area-inset-top,0px));background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:env(safe-area-inset-top,0px) 1.25rem 0;gap:12px;flex-shrink:0;}
 .topbar-logo{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;}
 .topbar-logo-mark{width:26px;height:26px;background:var(--teal);border-radius:6px;display:flex;align-items:center;justify-content:center;}
 .topbar-logo-mark svg{width:14px;height:14px;}
@@ -52,8 +53,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .tbar-lock{font-size:11px;color:var(--text2);background:transparent;border:1px solid var(--border);border-radius:var(--rad);padding:5px 10px;cursor:pointer;}
 .main{flex:1;overflow-y:auto;padding:1.25rem;}
 .page{display:none;}
-.page.active{display:block;height:calc(var(--app-vh,100vh) - 52px);overflow-y:auto;-webkit-overflow-scrolling:touch;}
-#page-ai.active{display:flex;flex-direction:column;height:calc(var(--app-vh,100vh) - 52px);overflow-y:hidden;}
+.page.active{display:block;height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+#page-ai.active{display:flex;flex-direction:column;height:100%;overflow-y:hidden;}
 
 /* ── RESPONSIVE NAV ── */
 .desktop-only{display:flex;}
@@ -69,8 +70,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   .desktop-only{display:none!important;}
   .mobile-only{display:flex!important;}
   #mobile-tabs{display:block!important;}
-  .page.active{height:calc(var(--app-vh,100vh) - 52px - 56px);} /* account for bottom tab bar */
-  #page-ai.active{height:calc(var(--app-vh,100vh) - 52px - 56px);}
+  .page.active{height:100%;}
+  #page-ai.active{height:100%;}
+  #mobile-tabs{order:3;flex-shrink:0;}
 }
 
 /* ── SAFE HERO ── */
@@ -150,7 +152,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .ai-input:focus{border-color:var(--teal4);}
 .ai-send{width:34px;height:34px;border-radius:50%;background:var(--teal);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .ai-send:hover{background:var(--teal2);}
-.ai-msgs{padding:1.25rem;display:flex;flex-direction:column;gap:12px;}
+.ai-msgs{padding:1.25rem;display:flex;flex-direction:column;gap:12px;min-height:0;}
 .ai-msg{display:flex;gap:10px;}
 .ai-msg.user{flex-direction:row-reverse;}
 .ai-avatar{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;}
@@ -318,6 +320,9 @@ input[type=range]{flex:1;height:4px;cursor:pointer;}
 <!-- PWA -->
 <link rel="manifest" href="manifest.json"/>
 <meta name="theme-color" content="#04342C"/>
+<link rel="icon" href="favicon.ico" sizes="any"/>
+<link rel="icon" type="image/png" href="icons/icon-192.png"/>
+<meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Vault"/>
@@ -358,13 +363,13 @@ input[type=range]{flex:1;height:4px;cursor:pointer;}
 </div>
 
 <!-- ═══════════════ APP ═══════════════ -->
-<div id="app" style="display:none;flex-direction:column;height:100vh;">
+<div id="app" style="display:none;flex-direction:column;">
   <div class="topbar">
     <div class="topbar-logo">
       <div class="topbar-logo-mark">
         <svg viewBox="0 0 14 14" fill="none"><rect x="2" y="6" width="10" height="7" rx="1.5" stroke="#5DCAA5" stroke-width="1.2"/><path d="M4.5 6V4.5a2.5 2.5 0 015 0V6" stroke="#5DCAA5" stroke-width="1.2" stroke-linecap="round"/><circle cx="7" cy="9.5" r="1.2" fill="#5DCAA5"/></svg>
       </div>
-      VaultLocal <span style="font-size:9px;color:var(--text3);font-weight:400;margin-left:4px;">v1.0 · 2026-04-08</span>
+      VaultLocal <span style="font-size:9px;color:var(--text3);font-weight:400;margin-left:4px;">v3.1 · 2026-07-10 (b64-chunk-fix)</span>
     </div>
     <div class="topbar-nav desktop-only">
       <button class="nav-btn active" onclick="showPage('dashboard',this)">Dashboard</button>
@@ -413,7 +418,7 @@ input[type=range]{flex:1;height:4px;cursor:pointer;}
   </div>
 
   <!-- Mobile bottom tab bar -->
-  <div id="mobile-tabs" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--surface);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom,0px);">
+  <div id="mobile-tabs" style="display:none;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom,0px);">
     <div style="display:flex;">
       <button class="tab-btn active" id="tab-dashboard" onclick="navTo('dashboard')"><span style="font-size:20px;display:block;">🏠</span><span>Home</span></button>
       <button class="tab-btn" id="tab-transactions" onclick="navTo('transactions')"><span style="font-size:20px;display:block;">↕</span><span>Txns</span></button>
@@ -544,8 +549,20 @@ input[type=range]{flex:1;height:4px;cursor:pointer;}
               <div style="font-size:13px;color:var(--text2);">Loading debts...</div>
             </div>
           </div>
-          
+          <div class="panel">
+            <div class="panel-hdr">
+              <div class="panel-title">Savings</div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <span style="font-size:13px;font-weight:600;color:var(--teal2);" id="dash-savings-total">€0.00</span>
+                <button class="ctrl-btn" style="font-size:11px;padding:4px 10px;" onclick="addSavingsAccount()">+ Add</button>
+              </div>
+            </div>
+            <div id="dash-savings-list">
+              <div style="font-size:13px;color:var(--text2);">Loading…</div>
+            </div>
+          </div>
         </div>
+
 
         <!-- DD full management table -->
         <div class="panel" id="dd-manager-panel" style="margin-bottom:1rem;display:none;">
@@ -609,7 +626,10 @@ input[type=range]{flex:1;height:4px;cursor:pointer;}
         </div>
 
         <!-- Hero metrics -->
-        <div id="analytics-hero" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:1.25rem;"></div>
+        <div id="analytics-hero" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:.5rem;"></div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:1.25rem;line-height:1.6;">
+          💡 Tap any metric to see its transactions. <strong>Income</strong> = money in to PTSB &amp; BOI only (salary, sales, refunds); Revolut credits don't count. Got a repayment landing in PTSB/BOI? Tap <strong>↩ reimb</strong> on it (excluded from income, offsets that category's spend). On a debit that's really a transfer (to savings or another of your accounts), tap <strong>↔ transfer</strong> to keep it out of spend totals.
+        </div>
 
         <!-- Unbudgeted breakdown -->
         <div id="unbudgeted-breakdown" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rad-lg);padding:1.25rem;margin-bottom:1.25rem;display:none;">
@@ -709,8 +729,15 @@ input[type=range]{flex:1;height:4px;cursor:pointer;}
             <span id="txn-period-label" style="font-size:13px;font-weight:500;min-width:180px;text-align:center;"></span>
             <button onclick="txnPeriodNav(1)" style="padding:4px 10px;border:1px solid var(--border);border-radius:var(--rad);background:var(--surface2);cursor:pointer;">›</button>
           </div>
+          <select id="txn-period-mode" onchange="renderTransactions()" title="Show spend, income, or all" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--rad);background:var(--surface);cursor:pointer;"><option value="">All</option><option value="spend">Spend only</option><option value="income">Income only</option></select>
           <span id="txn-period-total" style="font-size:12px;color:var(--text2);font-weight:500;"></span>
           <button onclick="askAIAboutTxnPeriod()" style="padding:5px 12px;border:1px solid var(--teal6);border-radius:var(--rad);background:var(--teal5);color:var(--teal2);font-size:12px;cursor:pointer;">Ask AI ↗</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);line-height:1.5;margin:-0.5rem 0 0.9rem;padding:0 0.25rem;">
+          Per-row toggles: <b style="color:#C99A2E;">↩ reimb</b> = a credit that repays a shared bill (off income, offsets that category's spend) ·
+          <b style="color:#185FA5;">↔ transfer</b> = money moved between your own accounts (off spend) ·
+          <b style="color:#9E3B3B;">⊘ exclude</b> = drop a one-off from income, spend <i>and</i> surplus (e.g. a lump-sum loan overpayment or a stock-sale windfall) ·
+          <b>📝</b> = add a note/tag. Tip: to count a transfer as real spending (e.g. an own-account top-up you spend from), just pick a category from its dropdown — it flips to spend and the choice sticks on re-import. <b>VPP Revo (Revolut) transfers are the exception:</b> they're never auto-categorised, so you review and categorise them each period to keep tabs on those variable costs. The AI reads all of this, so its figures stay exact.
         </div>
         <div id="txn-table-wrap"></div>
       </div>
@@ -720,16 +747,15 @@ input[type=range]{flex:1;height:4px;cursor:pointer;}
     <div class="page" id="page-ai">
       <div class="ctx-bar" id="ctx-bar">
         <div class="ctx-item"><div class="ctx-label">Safe to spend</div><div class="ctx-val" id="ctx-safe">—</div></div>
-        <div class="ctx-item"><div class="ctx-label">Next bill</div><div class="ctx-val">€185 · 13th</div></div>
-        <div class="ctx-item"><div class="ctx-label">Attic balance</div><div class="ctx-val">€4,650</div></div>
-        <div class="ctx-item"><div class="ctx-label">HummGroup</div><div class="ctx-val">€8,120</div></div>
-        <div class="ctx-item"><div class="ctx-label">Month spend</div><div class="ctx-val" id="ctx-spend">€1,037</div></div>
+        <div class="ctx-item"><div class="ctx-label">Pending this period</div><div class="ctx-val" id="ctx-pending">—</div></div>
+        <div class="ctx-item"><div class="ctx-label">Total balance</div><div class="ctx-val" id="ctx-balance">—</div></div>
+        <div class="ctx-item"><div class="ctx-label">Spent this period</div><div class="ctx-val" id="ctx-spend">—</div></div>
         <div class="ctx-item"><div class="ctx-label" id="ctx-ai-label">AI</div><div class="ctx-val" id="ctx-status">connecting...</div></div>
       </div>
       <div class="ai-msgs" id="ai-msgs" style="flex:1;overflow-y:auto;">
         <div class="ai-msg"><div class="ai-avatar av-ai">AI</div><div class="ai-bubble bubble-ai">Hello! Your financial context is loaded. I can see your safe-to-spend, upcoming bills, and all balances. What would you like to know?</div></div>
       </div>
-      <div style="padding:.75rem 1.25rem;background:var(--surface2);border-top:1px solid var(--border);flex-shrink:0;padding-bottom:calc(.75rem + env(safe-area-inset-bottom));">
+      <div style="padding:.75rem 1.25rem;background:var(--surface2);border-top:1px solid var(--border);flex-shrink:0;">
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.75rem;">
           <span class="badge b-green" style="cursor:pointer;padding:4px 10px;" onclick="aiAsk('Can I afford brunch tomorrow?')">Can I afford brunch tomorrow?</span>
           <span class="badge b-amber" style="cursor:pointer;padding:4px 10px;" onclick="aiAsk('What direct debits are still pending this month?')">Pending DDs this month?</span>
@@ -906,8 +932,8 @@ input[type=range]{flex:1;height:4px;cursor:pointer;}
         </div>
         <div class="settings-section">
           <div class="settings-title">Security</div>
-          <div class="setting-row"><div><div class="setting-label">Change PIN</div><div class="setting-sub">Set a new 4-digit PIN</div></div></div>
-          <div class="mini-dots"><div class="mini-dot" id="cd0"></div><div class="mini-dot" id="cd1"></div><div class="mini-dot" id="cd2"></div><div class="mini-dot" id="cd3"></div></div>
+          <div class="setting-row"><div><div class="setting-label">Change PIN</div><div class="setting-sub">Set a new 6-digit PIN</div></div></div>
+          <div class="mini-dots" id="change-pin-dots"><div class="mini-dot" id="cd0"></div><div class="mini-dot" id="cd1"></div><div class="mini-dot" id="cd2"></div><div class="mini-dot" id="cd3"></div><div class="mini-dot" id="cd4"></div><div class="mini-dot" id="cd5"></div></div>
           <div class="mini-keypad">
             <div class="mini-key" onclick="ck('1')">1</div><div class="mini-key" onclick="ck('2')">2</div><div class="mini-key" onclick="ck('3')">3</div>
             <div class="mini-key" onclick="ck('4')">4</div><div class="mini-key" onclick="ck('5')">5</div><div class="mini-key" onclick="ck('6')">6</div>
@@ -1135,35 +1161,143 @@ input[type=range]{flex:1;height:4px;cursor:pointer;}
 // PIN (defined first so onclick handlers work)
 // ═══════════════════════════════════════════════════
 const PIN_KEY='vl_pin';
+const PIN_LEN_KEY='vl_pin_len';
+const PIN_LEN=6;                 // length for newly-created PINs
 let pinEntry='',pinSetupStage='enter',pinSetup1='',pinSetup2='';
 
 function getStoredPin(){return localStorage.getItem(PIN_KEY);}
-function storePin(p){localStorage.setItem(PIN_KEY,p);}
+
+// Expected length of the CURRENT stored PIN (so existing 4-digit users aren't
+// locked out when the default moves to 6). New PINs are always PIN_LEN.
+function storedPinLen(){
+  const n=parseInt(localStorage.getItem(PIN_LEN_KEY)||'',10);
+  if(n) return n;
+  const s=getStoredPin();
+  if(!s) return PIN_LEN;
+  if(s.indexOf('pbk1:')===0) return 4;  // legacy hashes were created from 4-digit PINs
+  return s.length;                       // legacy plaintext PIN
+}
+
+// Render `count` dot elements into a container (used for both the unlock and
+// change-PIN screens so the dot count always matches the PIN length).
+function _renderDots(containerId,count,cls){
+  const c=document.getElementById(containerId);
+  if(!c) return;
+  let h='';
+  for(let i=0;i<count;i++) h+='<div class="'+cls+'"></div>';
+  c.innerHTML=h;
+}
+function refreshUnlockDots(){
+  _renderDots('pin-dots', getStoredPin()?storedPinLen():PIN_LEN, 'pin-dot');
+}
+
+// ── Brute-force lockout: 3 wrong PINs → 20-minute cooldown ─────────────────
+// State persists in localStorage so it survives reloads. (UI-level deterrent,
+// consistent with the PIN being a UI lock over local-only data.)
+const PIN_FAILS_KEY='vl_pin_fails';
+const PIN_LOCK_KEY='vl_pin_lockuntil';
+const PIN_MAX_FAILS=3;
+const PIN_LOCKOUT_MS=20*60*1000;
+let _pinLockTimer=null;
+function _pinLockUntil(){return parseInt(localStorage.getItem(PIN_LOCK_KEY)||'0',10)||0;}
+function pinLockRemaining(){return Math.max(0,_pinLockUntil()-Date.now());}
+function isPinLocked(){return pinLockRemaining()>0;}
+function clearPinFails(){localStorage.removeItem(PIN_FAILS_KEY);localStorage.removeItem(PIN_LOCK_KEY);}
+function _setKeypadDisabled(off){
+  const kp=document.querySelector('#pin-screen .keypad');
+  if(kp){kp.style.opacity=off?'0.35':'';kp.style.pointerEvents=off?'none':'';}
+}
+function _fmtMMSS(ms){const s=Math.ceil(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+function pinLockTick(){
+  const err=document.getElementById('pin-error');
+  if(pinLockRemaining()<=0){
+    if(_pinLockTimer){clearInterval(_pinLockTimer);_pinLockTimer=null;}
+    clearPinFails();
+    _setKeypadDisabled(false);
+    if(err)err.textContent='';
+    pinEntry='';updatePinDots(0);
+    return;
+  }
+  _setKeypadDisabled(true);
+  if(err)err.textContent='Too many attempts. Try again in '+_fmtMMSS(pinLockRemaining());
+}
+function startPinLockUI(){
+  if(_pinLockTimer)clearInterval(_pinLockTimer);
+  updatePinDots(0,true);
+  pinLockTick();
+  _pinLockTimer=setInterval(pinLockTick,1000);
+}
+
+// ── PIN hashing (PBKDF2-SHA256, per-device salt) ───────────────────────────
+// Stored format: "pbk1:<base64 salt>:<base64 hash>". Falls back to plaintext
+// only if Web Crypto is unavailable (e.g. legacy file:// / non-secure context).
+const _PIN_ITER=210000;
+function _b64enc(bytes){
+  // Avoid String.fromCharCode.apply(null, bytes) — throws "Maximum call
+  // stack size exceeded" once the byte array is larger than the engine's
+  // max function-argument count (commonly ~65k-125k). Chunk it instead.
+  let binary='';
+  const CHUNK=0x8000; // 32768
+  for(let i=0;i<bytes.length;i+=CHUNK){
+    binary+=String.fromCharCode.apply(null, bytes.subarray ? bytes.subarray(i,i+CHUNK) : bytes.slice(i,i+CHUNK));
+  }
+  return btoa(binary);
+}
+function _b64dec(s){return Uint8Array.from(atob(s),c=>c.charCodeAt(0));}
+
+async function _pinHash(pin,saltBytes){
+  const enc=new TextEncoder();
+  const km=await crypto.subtle.importKey('raw',enc.encode(pin),{name:'PBKDF2'},false,['deriveBits']);
+  const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:saltBytes,iterations:_PIN_ITER,hash:'SHA-256'},km,256);
+  return new Uint8Array(bits);
+}
+async function storePin(p){
+  localStorage.setItem(PIN_LEN_KEY,String(p.length));
+  if(!(window.crypto&&crypto.subtle)){ localStorage.setItem(PIN_KEY,p); return; }
+  const salt=crypto.getRandomValues(new Uint8Array(16));
+  const hash=await _pinHash(p,salt);
+  localStorage.setItem(PIN_KEY,'pbk1:'+_b64enc(salt)+':'+_b64enc(hash));
+}
+async function verifyPin(entered){
+  const stored=getStoredPin();
+  if(!stored) return false;
+  if(stored.indexOf('pbk1:')===0){
+    const parts=stored.split(':');
+    const calc=await _pinHash(entered,_b64dec(parts[1]));
+    return _b64enc(calc)===parts[2];
+  }
+  // Legacy plaintext PIN — verify then transparently upgrade to a hash
+  if(entered===stored){
+    try{ await storePin(entered); }catch(e){}
+    return true;
+  }
+  return false;
+}
 
 function updatePinDots(len,error=false){
-  for(let i=0;i<4;i++){
-    const d=document.getElementById('pd'+i);
+  document.querySelectorAll('#pin-dots .pin-dot').forEach((d,i)=>{
     d.className='pin-dot'+(i<len?' filled':'')+(error?' error':'');
-  }
+  });
 }
 
 function pk(k){
-  console.log('PIN key pressed:', k);
   const stored=getStoredPin();
   if(!stored){
-    // setup mode
-    if(pinSetupStage==='enter'&&pinSetup1.length<4){
+    // setup mode — new PINs are PIN_LEN digits
+    if(pinSetupStage==='enter'&&pinSetup1.length<PIN_LEN){
       pinSetup1+=k;updatePinDots(pinSetup1.length);
-      if(pinSetup1.length===4){pinSetupStage='confirm';setTimeout(()=>{document.getElementById('pin-sub').textContent='Confirm your PIN';updatePinDots(0);pinSetup2='';},300);}
-    } else if(pinSetupStage==='confirm'&&pinSetup2.length<4){
+      if(pinSetup1.length===PIN_LEN){pinSetupStage='confirm';setTimeout(()=>{document.getElementById('pin-sub').textContent='Confirm your PIN';updatePinDots(0);pinSetup2='';},300);}
+    } else if(pinSetupStage==='confirm'&&pinSetup2.length<PIN_LEN){
       pinSetup2+=k;updatePinDots(pinSetup2.length);
-      if(pinSetup2.length===4)setTimeout(confirmSetup,120);
+      if(pinSetup2.length===PIN_LEN)setTimeout(confirmSetup,120);
     }
   } else {
-    if(pinEntry.length>=4)return;
+    if(isPinLocked()){ startPinLockUI(); return; }
+    const target=storedPinLen();
+    if(pinEntry.length>=target)return;
     pinEntry+=k;updatePinDots(pinEntry.length);
     document.getElementById('pin-error').textContent='';
-    if(pinEntry.length===4)setTimeout(checkPin,120);
+    if(pinEntry.length===target)setTimeout(checkPin,120);
   }
 }
 
@@ -1177,25 +1311,33 @@ function pkDel(){
   }
 }
 
-function confirmSetup(){
+async function confirmSetup(){
   if(pinSetup1!==pinSetup2){
-    updatePinDots(4,true);
+    updatePinDots(PIN_LEN,true);
     setTimeout(()=>{pinSetupStage='enter';pinSetup1='';pinSetup2='';updatePinDots(0);document.getElementById('pin-sub').textContent='PINs did not match — try again';},800);
     return;
   }
-  storePin(pinSetup1);unlockApp();
+  await storePin(pinSetup1);unlockApp(pinSetup1);
 }
 
-function checkPin(){
-  if(pinEntry===getStoredPin()){unlockApp();}
-  else{
-    updatePinDots(4,true);
-    document.getElementById('pin-error').textContent='Incorrect PIN';
-    setTimeout(()=>{pinEntry='';updatePinDots(0);document.getElementById('pin-error').textContent='';},1000);
+async function checkPin(){
+  if(await verifyPin(pinEntry)){ clearPinFails(); unlockApp(pinEntry); return; }
+  // Wrong PIN — count the failure and lock out after PIN_MAX_FAILS
+  const fails=(parseInt(localStorage.getItem(PIN_FAILS_KEY)||'0',10)||0)+1;
+  localStorage.setItem(PIN_FAILS_KEY,String(fails));
+  if(fails>=PIN_MAX_FAILS){
+    localStorage.setItem(PIN_LOCK_KEY,String(Date.now()+PIN_LOCKOUT_MS));
+    pinEntry='';
+    startPinLockUI();
+    return;
   }
+  const left=PIN_MAX_FAILS-fails;
+  updatePinDots(storedPinLen(),true);
+  document.getElementById('pin-error').textContent='Incorrect PIN — '+left+' attempt'+(left===1?'':'s')+' left';
+  setTimeout(()=>{pinEntry='';updatePinDots(0);document.getElementById('pin-error').textContent='';},1000);
 }
 
-async function unlockApp(){
+async function unlockApp(pin){
   const sub     = document.getElementById('pin-sub');
   const resetEl = document.getElementById('pin-reset-link');
 
@@ -1231,6 +1373,15 @@ async function unlockApp(){
 
   // Show app
   sub.textContent = 'Loading…';
+  // Derive the data-encryption key from the PIN before any data is read/written
+  try{
+    await ensureCryptoUnlocked(pin);
+  }catch(err){
+    console.error('crypto unlock failed:', err);
+    sub.textContent = 'Could not unlock encrypted data. If this persists, use Reset below.';
+    if(resetEl) resetEl.style.display = 'block';
+    return;
+  }
   document.getElementById('pin-screen').style.display = 'none';
   document.getElementById('app').style.display        = 'flex';
   try{
@@ -1247,8 +1398,13 @@ async function unlockApp(){
 // Emergency reset — clears PIN + wipes IndexedDB so the user can start fresh
 async function emergencyReset(){
   if(!confirm('This will clear your PIN and all locally stored data (transactions, DDs, debts).\n\nYour cloud data (if synced via GitHub Gist) is not affected and can be pulled again after reset.\n\nContinue?')) return;
-  // Clear localStorage
+  // Clear PIN + encryption key + lockout state
   localStorage.removeItem('vl_pin');
+  localStorage.removeItem('vl_pin_len');
+  localStorage.removeItem('vl_pin_fails');
+  localStorage.removeItem('vl_pin_lockuntil');
+  localStorage.removeItem('vl_dek');
+  _dek=null;_dekRaw=null;
   // Attempt to delete the DB
   try{
     await new Promise((res,rej)=>{
@@ -1259,17 +1415,18 @@ async function emergencyReset(){
   db = null;
   // Reset PIN screen to fresh state
   document.getElementById('pin-title').textContent = 'Set your PIN';
-  document.getElementById('pin-sub').textContent   = 'Choose a 4-digit PIN to protect VaultLocal';
+  document.getElementById('pin-sub').textContent   = 'Choose a ' + PIN_LEN + '-digit PIN to protect VaultLocal';
   document.getElementById('pin-reset-link').style.display = 'none';
   document.getElementById('pin-ios-banner').style.display = 'none';
   pinEntry = ''; pinSetupStage = 'enter'; pinSetup1 = ''; pinSetup2 = '';
+  refreshUnlockDots();
   updatePinDots(0);
 }
 
 // ═══════════════════════════════════════════════════
 // DB
 // ═══════════════════════════════════════════════════
-const DB_NAME='vaultlocal',DB_VER=6;
+const DB_NAME='vaultlocal',DB_VER=7;
 let db=null;
 
 // Single shared DB-open promise — declared here so all functions can reference it
@@ -1297,6 +1454,8 @@ function openDB(){
         d.createObjectStore('transferMaps',{keyPath:'id',autoIncrement:true});
       if(!d.objectStoreNames.contains('categories'))
         d.createObjectStore('categories',{keyPath:'name'});
+      if(!d.objectStoreNames.contains('savings'))
+        d.createObjectStore('savings',{keyPath:'id',autoIncrement:true});
     };
     req.onsuccess=e=>res(e.target.result);
     req.onerror=()=>rej(req.error);
@@ -1324,49 +1483,139 @@ async function nukeAndReopenDB(){
   return db;
 }
 
-const dbAdd=(store,data)=>new Promise((res,rej)=>{
-  if(!db)return rej(new Error('DB not ready'));
-  const tx=db.transaction(store,'readwrite');
-  const r=tx.objectStore(store).add(data);
-  r.onsuccess=()=>res(r.result);
-  r.onerror=()=>rej(r.error);
-});
-const dbGetAll=(store)=>new Promise((res,rej)=>{
-  if(!db)return rej(new Error('DB not ready'));
-  const tx=db.transaction(store,'readonly');
-  const r=tx.objectStore(store).getAll();
-  r.onsuccess=()=>res(r.result);
-  r.onerror=()=>rej(r.error);
-});
+// ═══════════════════════════════════════════════════
+// AT-REST ENCRYPTION (envelope: random data key wrapped by PIN-derived key)
+// ═══════════════════════════════════════════════════
+// Each record is stored as { <keyPath>: <plaintext key>, _enc: "<iv>:<ciphertext>" }.
+// Key paths stay in the clear so get/delete-by-key and autoIncrement still work;
+// the record body (amounts, descriptions, balances…) is AES-GCM encrypted.
+// The data key (DEK) is random and wrapped with a key derived from the PIN, so
+// changing the PIN only re-wraps the DEK — no data re-encryption needed.
+const _STORE_KEYPATH={transactions:'id',uploads:'id',directDebits:'id',debts:'id',transferMaps:'id',settings:'key',rules:'vendor',categories:'name',savings:'id'};
+const _ALL_STORES=Object.keys(_STORE_KEYPATH);
+const DEK_KEY='vl_dek';
+let _dek=null,_dekRaw=null;        // in-memory AES-GCM key + raw bytes (for re-wrap)
+
+async function _deriveKEK(pin,salt){
+  const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pin),{name:'PBKDF2'},false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:210000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function _useDEK(raw){ _dekRaw=raw; _dek=await crypto.subtle.importKey('raw',raw,{name:'AES-GCM'},false,['encrypt','decrypt']); }
+async function _wrapDEK(rawDek,pin){
+  const salt=crypto.getRandomValues(new Uint8Array(16));
+  const kek=await _deriveKEK(pin,salt);
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},kek,rawDek));
+  localStorage.setItem(DEK_KEY,JSON.stringify({v:1,salt:_b64enc(salt),iv:_b64enc(iv),ct:_b64enc(ct)}));
+}
+async function _unwrapDEK(pin){
+  const j=JSON.parse(localStorage.getItem(DEK_KEY));
+  const kek=await _deriveKEK(pin,_b64dec(j.salt));
+  return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:_b64dec(j.iv)},kek,_b64dec(j.ct)));
+}
+async function rewrapDEK(newPin){ if(_dekRaw) await _wrapDEK(_dekRaw,newPin); }   // on PIN change
+
+async function _aesEnc(plaintext){
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},_dek,new TextEncoder().encode(plaintext)));
+  return _b64enc(iv)+':'+_b64enc(ct);
+}
+async function _aesDec(blob){
+  const i=blob.indexOf(':');
+  return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:_b64dec(blob.slice(0,i))},_dek,_b64dec(blob.slice(i+1))));
+}
+async function _encRecord(store,data){
+  if(!_dek) return data;                       // crypto unavailable → store plaintext
+  const kp=_STORE_KEYPATH[store];
+  const out={_enc:await _aesEnc(JSON.stringify(data))};
+  if(kp&&data[kp]!==undefined&&data[kp]!==null) out[kp]=data[kp];
+  return out;
+}
+async function _decRecord(store,rec){
+  if(!rec||rec._enc===undefined) return rec;   // legacy plaintext record
+  if(!_dek) throw new Error('Vault locked');
+  const obj=JSON.parse(await _aesDec(rec._enc));
+  const kp=_STORE_KEYPATH[store];
+  if(kp&&rec[kp]!==undefined) obj[kp]=rec[kp];  // restore autoIncrement id
+  return obj;
+}
+// Raw (un-encrypted) IDB ops used only by the one-time migration
+function _rawGetAll(store){return new Promise((res,rej)=>{const tx=db.transaction(store,'readonly');const r=tx.objectStore(store).getAll();r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+function _rawPut(store,data){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');const r=tx.objectStore(store).put(data);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+async function _migrateEncryptAll(){
+  if(!_dek) return;
+  for(const store of _ALL_STORES){
+    let recs; try{ recs=await _rawGetAll(store); }catch(e){ continue; }
+    for(const rec of recs){
+      if(rec && rec._enc===undefined) await _rawPut(store, await _encRecord(store, rec));
+    }
+  }
+}
+// Derive/unwrap the data key from the PIN. Creates+migrates on first use.
+async function ensureCryptoUnlocked(pin){
+  if(!(window.crypto&&crypto.subtle)){ _dek=null; return; }   // non-secure context → plaintext fallback
+  if(localStorage.getItem(DEK_KEY)){
+    await _useDEK(await _unwrapDEK(pin));
+  } else {
+    await _useDEK(crypto.getRandomValues(new Uint8Array(32)));
+    await _wrapDEK(_dekRaw,pin);
+    await _migrateEncryptAll();
+  }
+}
+
+async function dbAdd(store,data){
+  if(!db) throw new Error('DB not ready');
+  const stored=await _encRecord(store,data);
+  return new Promise((res,rej)=>{
+    const r=db.transaction(store,'readwrite').objectStore(store).add(stored);
+    r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);
+  });
+}
+async function dbGetAll(store){
+  if(!db) throw new Error('DB not ready');
+  const recs=await new Promise((res,rej)=>{
+    const r=db.transaction(store,'readonly').objectStore(store).getAll();
+    r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);
+  });
+  return Promise.all(recs.map(rec=>_decRecord(store,rec)));
+}
+async function dbGet(store,key){
+  if(!db) throw new Error('DB not ready');
+  const rec=await new Promise((res,rej)=>{
+    const r=db.transaction(store,'readonly').objectStore(store).get(key);
+    r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);
+  });
+  return _decRecord(store,rec);
+}
 const dbClear=(store)=>new Promise((res,rej)=>{
   if(!db)return rej(new Error('DB not ready'));
-  const tx=db.transaction(store,'readwrite');
-  const r=tx.objectStore(store).clear();
-  r.onsuccess=()=>res();
-  r.onerror=()=>rej(r.error);
+  const r=db.transaction(store,'readwrite').objectStore(store).clear();
+  r.onsuccess=()=>res(); r.onerror=()=>rej(r.error);
 });
-const dbPut=(store,data)=>new Promise((res,rej)=>{
-  if(!db)return rej(new Error('DB not ready'));
-  const tx=db.transaction(store,'readwrite');
-  const r=tx.objectStore(store).put(data);
-  r.onsuccess=()=>res(r.result);
-  r.onerror=()=>rej(r.error);
-});
+async function dbPut(store,data){
+  if(!db) throw new Error('DB not ready');
+  const stored=await _encRecord(store,data);
+  return new Promise((res,rej)=>{
+    const r=db.transaction(store,'readwrite').objectStore(store).put(stored);
+    r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);
+  });
+}
 
 function lockApp(){
   document.getElementById('app').style.display='none';
   document.getElementById('pin-screen').style.display='flex';
-  pinEntry='';updatePinDots(0);
+  pinEntry='';refreshUnlockDots();updatePinDots(0);
   document.getElementById('pin-title').textContent='Enter your PIN';
   document.getElementById('pin-sub').textContent='VaultLocal is locked';
+  if(isPinLocked()) startPinLockUI();
 }
 
 // Settings PIN change
 let changePin='';
-function ck(k){if(changePin.length>=4)return;changePin+=k;updateChangeDots(changePin.length);if(changePin.length===4)document.getElementById('save-pin-btn').disabled=false;}
+function ck(k){if(changePin.length>=PIN_LEN)return;changePin+=k;updateChangeDots(changePin.length);if(changePin.length===PIN_LEN)document.getElementById('save-pin-btn').disabled=false;}
 function ckDel(){changePin=changePin.slice(0,-1);updateChangeDots(changePin.length);document.getElementById('save-pin-btn').disabled=true;}
-function updateChangeDots(len){for(let i=0;i<4;i++){const d=document.getElementById('cd'+i);if(d)d.className='mini-dot'+(i<len?' filled':'');}}
-function savePin(){if(changePin.length!==4)return;storePin(changePin);changePin='';updateChangeDots(0);document.getElementById('save-pin-btn').disabled=true;document.getElementById('pin-change-msg').textContent='PIN updated.';setTimeout(()=>document.getElementById('pin-change-msg').textContent='',3000);}
+function updateChangeDots(len){document.querySelectorAll('#change-pin-dots .mini-dot').forEach((d,i)=>{d.className='mini-dot'+(i<len?' filled':'');});}
+async function savePin(){if(changePin.length!==PIN_LEN)return;await storePin(changePin);await rewrapDEK(changePin);changePin='';updateChangeDots(0);document.getElementById('save-pin-btn').disabled=true;document.getElementById('pin-change-msg').textContent='PIN updated.';setTimeout(()=>document.getElementById('pin-change-msg').textContent='',3000);}
 
 // ═══════════════════════════════════════════════════
 // PARSERS
@@ -1396,16 +1645,30 @@ let USER_RULES = []; // loaded async on init
 
 function categorise(desc, amount, isInternal){
   const d=(desc||'').toLowerCase();
-  
-  // Special rule: VPP Revo Revolut transfers around €1000 = Groceries
-  if(d.includes('vpp revo revolut') && isInternal && amount && Math.abs(Math.abs(amount) - 1000) < 50){
-    return 'Groceries';
-  }
-  
-  // User rules take priority over built-in rules
+
+  // VPP Revo (Revolut) transfers are your variable-spend wallet top-ups. Never auto-categorise
+  // them — not from a saved rule and not from a heuristic — so each one comes in as Unknown and
+  // you consciously categorise it every period to keep a check on those variable costs. They
+  // still count as spend (Unknown is included in spend totals) until you assign a category.
+  if(d.includes('vpp revo')) return 'Unknown';
+
+  // Your manual rules win over everything, so a category you pick sticks on re-import.
   for(const r of USER_RULES) if(d.includes(r.vendor.toLowerCase())) return r.category;
+
   for(const r of CAT_RULES) if(d.includes(r.v)) return r.c;
   return 'Unknown';
+}
+
+// True when you've manually mapped this vendor to a real spend category — used by the
+// importers so a transfer you decided is real spending stays as spend on future imports
+// (overrides the bank's auto internal-transfer flag).
+const _NON_SPEND_CATS = ['Internal','Income','Savings','Interest','Refund'];
+function userWantsSpend(desc){
+  const d=(desc||'').toLowerCase();
+  for(const r of USER_RULES){
+    if(d.includes(r.vendor.toLowerCase())) return !_NON_SPEND_CATS.includes(r.category);
+  }
+  return false;
 }
 
 async function loadUserRules(){
@@ -1445,6 +1708,47 @@ async function ensureDefaultRules(){
   }catch(e){
     console.error('Error in ensureDefaultRules:', e);
   }
+}
+
+// One-time fix: the PTSB "MORTGAGE" line is a €1,400 funding transfer to BOI (not a real
+// expense — the real mortgage is the BOI "Bank of Irela SEPA DD" debit). Flag existing PTSB
+// mortgage lines as internal so they stop double-counting in spend. Runs once.
+async function ensureMortgageTransferInternal(){
+  if(localStorage.getItem('mortgage_transfer_fix_v1')) return;
+  try{
+    const txns = await dbGetAll('transactions');
+    let updated = 0;
+    for(const t of txns){
+      const d=(t.description||'').toLowerCase();
+      if(t.bank==='ptsb' && /\bmortgage\b/.test(d) && !t.isInternal){
+        await dbPut('transactions', {...t, isInternal:true, _userInternal:true});
+        updated++;
+      }
+    }
+    localStorage.setItem('mortgage_transfer_fix_v1','1');
+    if(updated>0){ console.log('Mortgage-transfer fix: flagged '+updated+' PTSB mortgage transfer(s) as internal'); await refreshAll(); }
+  }catch(e){ console.error('Error in ensureMortgageTransferInternal:', e); }
+}
+
+// One-time: make VPP Revo (Revolut) transfers manual-review again. Removes any saved rule that
+// would auto-categorise them, and resets AUTO-categorised ones (not the ones you set by hand)
+// back to Unknown so you can re-review this period's variable costs. Runs once.
+async function ensureVppRevoManual(){
+  if(localStorage.getItem('vpp_revo_manual_v1')) return;
+  try{
+    const rules = await dbGetAll('rules');
+    for(const r of rules){ if((r.vendor||'').toLowerCase().includes('vpp revo')) await deleteUserRule(r.vendor); }
+    const txns = await dbGetAll('transactions');
+    let updated = 0;
+    for(const t of txns){
+      if((t.description||'').toLowerCase().includes('vpp revo') && !t._userCategorised && t.category!=='Unknown'){
+        await dbPut('transactions', {...t, category:'Unknown'});
+        updated++;
+      }
+    }
+    localStorage.setItem('vpp_revo_manual_v1','1');
+    if(updated>0){ console.log('VPP Revo manual review: reset '+updated+' auto-categorised transfer(s) to Unknown'); await refreshAll(); }
+  }catch(e){ console.error('Error in ensureVppRevoManual:', e); }
 }
 
 async function saveUserRule(vendor, category){
@@ -1487,7 +1791,14 @@ function parseDate(s){
   }
   // Already YYYY-MM-DD or ISO
   if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
-  return s.slice(0,10);
+  // Fallback: let the engine parse it (handles a stringified JS Date such as
+  // "Wed Mar 27 2026 00:00:00 GMT+0000", ISO with time, etc.)
+  const dd=new Date(s);
+  if(!isNaN(dd.getTime())){
+    const y=dd.getFullYear(),mo=String(dd.getMonth()+1).padStart(2,'0'),dy=String(dd.getDate()).padStart(2,'0');
+    return `${y}-${mo}-${dy}`;
+  }
+  return ''; // unparseable — let the caller skip or use carry-down
 }
 function parsePtsbAmt(s){
   if(!s)return 0;
@@ -1568,8 +1879,10 @@ function parsePtsbRows(rowArrays){
     const p=[];
     const needed=Math.max(dDate,dDesc,dIn,dOut,dBal)+1;
     for(let j=0;j<needed;j++) p.push(String(raw[j]===null||raw[j]===undefined?'':raw[j]).trim());
-    const rawDateStr=p[dDate]||'';
-    if(rawDateStr){ const pd=parseDate(rawDateStr); if(pd) lastDate=pd; }
+    const rawDateCell=raw[dDate];
+    if(rawDateCell!==null && rawDateCell!==undefined && String(rawDateCell).trim()!==''){
+      const pd=parseDate(rawDateCell); if(pd) lastDate=pd;
+    }
     const date=lastDate;
     if(!date)continue;
     const desc=p[dDesc]||'';
@@ -1582,8 +1895,12 @@ function parsePtsbRows(rowArrays){
     const dl=desc.toLowerCase();
     // Credits with 'mortgage' in description are internal on PTSB
     // (BOI pays the mortgage and PTSB current account shows the receipt — not real income)
-    const isInternalCredit = isCredit && /\bmortgage\b/i.test(dl);
-    const isInternal=isInternalCredit||(!isCredit&&PTSB_DEDUP_OUT.some(d=>dl.includes(d)));
+    // A PTSB "mortgage" line (the debit out to BOI, or its credit receipt) is an INTERNAL
+    // funding transfer to the BOI account — the real mortgage (BOI "Bank of Irela SEPA DD")
+    // plus Taekwondo, mortgage protection and other BOI debits are the actual costs, so
+    // counting this transfer too would double-count ~€1,400/month.
+    const isMortgageTransfer = /\bmortgage\b/i.test(dl);
+    const isInternal=(isMortgageTransfer||(!isCredit&&PTSB_DEDUP_OUT.some(d=>dl.includes(d))))&&!userWantsSpend(desc);
     // Capture running balance if present on this row (PTSB prints it once per date-group)
     const balStr=(p[dBal]||'').replace(/[€,\s]/g,'');
     const balanceAfter=balStr!==''&&!isNaN(parseFloat(balStr))?parseFloat(balStr):null;
@@ -1633,8 +1950,10 @@ function parseBoiRows(rowArrays){
     for(let j=0;j<=Math.max(colDate,colDetails,colDebit,colCredit,colBalance);j++){
       p.push(String(raw[j]===null||raw[j]===undefined?'':raw[j]).trim());
     }
-    const rawDateStr=p[colDate]||'';
-    if(rawDateStr){ const pd=parseDate(rawDateStr); if(pd) lastBoiDate=pd; }
+    const rawDateCell=raw[colDate];
+    if(rawDateCell!==null && rawDateCell!==undefined && String(rawDateCell).trim()!==''){
+      const pd=parseDate(rawDateCell); if(pd) lastBoiDate=pd;
+    }
     const date=lastBoiDate;
     if(!date)continue;
     const desc=p[colDetails]||'';
@@ -1649,7 +1968,9 @@ function parseBoiRows(rowArrays){
     const isCredit=credit>0&&debit===0;
     const amount=isCredit?credit:debit;
     const dl=desc.toLowerCase();
-    const isInternal=BOI_DEDUP.some(d=>dl.includes(d));
+    // A BOI "mortgage" CREDIT is the receipt of the PTSB funding transfer — internal.
+    // (The real mortgage is the "Bank of Irela SEPA DD" debit, which carries no "mortgage" text.)
+    const isInternal=(BOI_DEDUP.some(d=>dl.includes(d))||(isCredit&&/\bmortgage\b/i.test(dl)))&&!userWantsSpend(desc);
     // BoI prints the running balance only on the last (bottom) row of each date-group
     const balStr=(p[colBalance]||'').replace(/[€,\s]/g,'');
     const balanceAfter=balStr!==''&&!isNaN(parseFloat(balStr))?parseFloat(balStr):null;
@@ -1715,7 +2036,7 @@ const PARSERS={
       const amt=parseFloat((iAmt>=0?p[iAmt]:'0').replace(/[€,]/g,''))||0;
       const type=iType>=0?(p[iType]||'').toLowerCase():'';
       const dl=desc.toLowerCase();
-      const isInternal=type==='transfer'&&REVOLUT_DEDUP.some(d=>dl.includes(d));
+      const isInternal=type==='transfer'&&REVOLUT_DEDUP.some(d=>dl.includes(d))&&!userWantsSpend(desc);
       const isCredit=amt>0;
       const amount=Math.abs(amt);
       if(amount===0)return;
@@ -1851,14 +2172,9 @@ async function refreshBalances(){
   const BANKS=['ptsb','boi','revolut'];
   const labels={ptsb:'PTSB current',boi:'Bank of Ireland',revolut:'Revolut'};
   let totalAssets=0;
-  const DEBT=8120+4650+1320+800; // loans + credit cards
   for(const b of BANKS){
     try{
-      const rec=await new Promise((res,rej)=>{
-        const tx=db.transaction('settings','readonly');
-        const r=tx.objectStore('settings').get(`bal_${b}`);
-        r.onsuccess=()=>res(r.result);r.onerror=()=>rej();
-      });
+      const rec=await dbGet('settings',`bal_${b}`);
       const val=rec?parseFloat(rec.value)||0:null;
       const el=document.getElementById(`bal-display-${b}`);
       if(el&&val!==null){
@@ -1867,6 +2183,15 @@ async function refreshBalances(){
       }
     }catch(e){}
   }
+  // Include savings account balances as assets in net worth
+  const savingsTotal = await getSavingsTotal();
+  totalAssets += savingsTotal;
+  // Live debt total from the debts store (falls back to the original hardcoded seed values)
+  let DEBT=8120+4650+1320+800;
+  try{
+    const debts = await dbGetAll('debts');
+    if(debts.length) DEBT = debts.reduce((a,d)=>a+(parseFloat(d.balance)||0),0);
+  }catch(e){}
   const netEl=document.getElementById('bal-display-net');
   if(netEl&&totalAssets>0){
     const net=totalAssets-DEBT;
@@ -1874,6 +2199,7 @@ async function refreshBalances(){
     netEl.style.color=net<0?'var(--red)':'var(--teal2)';
   }
 }
+
 
 function toggleBalanceEdit(bank){
   const displayEl = document.getElementById(`bal-display-${bank}`);
@@ -1935,10 +2261,12 @@ async function refreshAll(){
   renderRunway(txns);
   updateSettingsCounts(txns.length,uploads.length);
   await refreshBalances();
+  await renderSavingsPanel();
   await renderDDPanel(txns);
   renderAffordability();
   renderBudgetCheck();
   await renderDebtList(); // sync debt page with DD status
+
   // Refresh ghost budgeting with live debt data
   const activePill = document.querySelector('.sc-pill.active');
   if(activePill){
@@ -1994,17 +2322,35 @@ async function changeTxnCategory(id, newCat){
   if(!t) return;
 
   // Extract vendor key — strip date prefix, normalise
-  const vendor = (t.description||'').replace(/^\d{2}[A-Z]{3}\s*/i,'').trim().toLowerCase().slice(0,20);
+  let vendor = (t.description||'').replace(/^\d{2}[A-Z]{3}\s*/i,'').trim().toLowerCase().slice(0,20);
+  // Collapse card-masked vendors to a stable key so the rule also matches FUTURE imports
+  // (e.g. "vpp revo revolut**8891*" or "revolut**822" → a key without the changing digits).
+  const _dl = (t.description||'').toLowerCase();
+  if(_dl.includes('vpp revo')) vendor = 'vpp revo';
+  else if(_dl.includes('revolut**')) vendor = 'revolut**';
 
-  // Save rule first
-  if(vendor) await saveUserRule(vendor, newCat);
+  // VPP Revo transfers are your variable-spend wallet: categorise ONLY this one and DON'T save a
+  // rule, so they never auto-categorise from a previous month — you review them each period.
+  const isVppRevo = _dl.includes('vpp revo');
 
-  // Apply to ALL matching transactions (not just this one)
+  // Save rule first (skipped for VPP Revo so it stays manual)
+  if(vendor && !isVppRevo) await saveUserRule(vendor, newCat);
+
+  // Choosing "Internal" re-marks as a transfer; any real category turns a transfer into spend.
+  const makeInternal = (newCat === 'Internal');
+
+  // Apply to ALL matching transactions (just this one for VPP Revo)
   let updated = 0;
   for(const tx of all){
     const txVendor = (tx.description||'').replace(/^\d{2}[A-Z]{3}\s*/i,'').trim().toLowerCase();
-    if(txVendor.includes(vendor.slice(0,12)) || (vendor.length > 5 && vendor.includes(txVendor.slice(0,12)))){
-      await dbPut('transactions', {...tx, category: newCat, _userCategorised: true});
+    const isMatch = isVppRevo
+      ? (tx.id === id)
+      : (txVendor.includes(vendor.slice(0,12)) || (vendor.length > 5 && vendor.includes(txVendor.slice(0,12))));
+    if(isMatch){
+      const patch = {...tx, category: newCat, _userCategorised: true};
+      if(makeInternal){ patch.isInternal = true; patch._userInternal = true; }
+      else if(tx.isInternal){ patch.isInternal = false; patch._userInternal = false; } // transfer → real spend
+      await dbPut('transactions', patch);
       updated++;
     }
   }
@@ -2048,6 +2394,8 @@ async function viewCategoryTransactions(cat, dateFrom, dateTo){
   window._txnPeriodFrom = dateFrom;
   window._txnPeriodTo = dateTo;
   window._txnPeriodCat = cat;
+  window._txnTypeFilter = null;
+  window._txnCatSet = null;
   await renderTransactions();
   // Banner after render completes
   const wrap = document.getElementById('txn-table-wrap');
@@ -2065,6 +2413,8 @@ function clearPeriodFilter(){
   window._txnPeriodFrom = null;
   window._txnPeriodTo = null;
   window._txnPeriodCat = null;
+  window._txnTypeFilter = null;
+  window._txnCatSet = null;
   const catSel = document.getElementById('txn-filter-cat');
   if(catSel) catSel.value = '';
   const banner = document.getElementById('txn-period-banner');
@@ -2072,11 +2422,37 @@ function clearPeriodFilter(){
   renderTransactions();
 }
 
+// Drill into a period's transactions from the Analytics hero tiles.
+// type: 'spend' | 'income' | 'all'; catSet: optional list of categories to limit to.
+async function viewPeriodTransactions(type, dateFrom, dateTo, catSet, labelText){
+  const navBtn = document.querySelector('.nav-btn:nth-child(2)');
+  showPage('transactions', navBtn);
+  ['txn-filter-bank','txn-filter-cat','txn-amt-min','txn-amt-max','txn-search'].forEach(id=>{const el=document.getElementById(id); if(el) el.value='';});
+  const cb=document.getElementById('txn-period-enabled'); if(cb) cb.checked=false; // avoid double period filter
+  window._txnPeriodFrom = dateFrom;
+  window._txnPeriodTo = dateTo;
+  window._txnPeriodCat = null;
+  window._txnTypeFilter = type;
+  window._txnCatSet = (Array.isArray(catSet)&&catSet.length)?catSet:null;
+  await renderTransactions();
+  const wrap = document.getElementById('txn-table-wrap');
+  const oldBanner = document.getElementById('txn-period-banner');
+  if(oldBanner) oldBanner.remove();
+  const banner = document.createElement('div');
+  banner.id = 'txn-period-banner';
+  banner.style.cssText = 'background:var(--teal5);border:1px solid var(--teal6);border-radius:var(--rad);padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--teal2);display:flex;justify-content:space-between;align-items:center;gap:8px;';
+  banner.innerHTML = '<span>Showing <strong>'+labelText+'</strong> · '+dateFrom+' → '+dateTo+'</span>'
+    +'<button onclick="clearPeriodFilter()" style="font-size:11px;padding:3px 8px;border:1px solid var(--teal6);border-radius:4px;background:transparent;color:var(--teal2);cursor:pointer;flex-shrink:0;">✕ Clear filter</button>';
+  if(wrap) wrap.prepend(banner);
+}
+
 function clearAllFilters(){
   window._txnPeriodFrom = null;
   window._txnPeriodTo = null;
   window._txnPeriodCat = null;
-  const ids = ['txn-filter-bank','txn-filter-cat','txn-search','txn-amt-min','txn-amt-max'];
+  window._txnTypeFilter = null;
+  window._txnCatSet = null;
+  const ids = ['txn-filter-bank','txn-filter-cat','txn-search','txn-amt-min','txn-amt-max','txn-period-mode'];
   ids.forEach(id => {
     const el = document.getElementById(id);
     if(el) el.tagName === 'SELECT' ? el.value = '' : el.value = '';
@@ -2088,6 +2464,63 @@ function clearAllFilters(){
 
 // ── Transactions-page salary-period selector state ──
 let txnPeriodOffset = 0;
+async function toggleReimbursement(id){
+  if(!id) return;
+  const all = await dbGetAll('transactions');
+  const t = all.find(x => x.id === id);
+  if(!t) return;
+  await dbPut('transactions', {...t, _reimbursement: !t._reimbursement});
+  await renderTransactions();
+  // Keep analytics figures in sync if that page has been rendered
+  try{ if(typeof renderAnalytics === 'function') await renderAnalytics(); }catch(e){}
+}
+
+// Manually mark a transaction as an internal transfer (or undo). Internal txns are
+// excluded from spend totals, income, and all period figures — same lever the
+// importer uses for auto-detected transfers.
+async function toggleInternal(id){
+  if(!id) return;
+  const all = await dbGetAll('transactions');
+  const t = all.find(x => x.id === id);
+  if(!t) return;
+  const makeInternal = !t.isInternal;
+  await dbPut('transactions', {...t, isInternal: makeInternal, _userInternal: makeInternal});
+  await renderTransactions();
+  try{ if(typeof renderAnalytics === 'function') await renderAnalytics(); }catch(e){}
+}
+
+// Mark a transaction as "exclude from analysis" (or undo). This is a deterministic
+// lever distinct from ↔ transfer: it removes the transaction from BOTH income and
+// spend totals (and therefore from the surplus = income − spend) without changing
+// its category or bank. Use it for one-off items that distort the period picture —
+// e.g. a lump-sum loan overpayment (debit) or a one-off windfall like a stock sale
+// (credit). Because spendByCat and isIncomeTxn both honour the flag, the Analytics
+// page and every AI tool (get_period_cashflow, get_spending_by_category,
+// get_income_this_period) recompute exact figures automatically — no LLM math.
+async function toggleExcludeAnalysis(id){
+  if(!id) return;
+  const all = await dbGetAll('transactions');
+  const t = all.find(x => x.id === id);
+  if(!t) return;
+  await dbPut('transactions', {...t, _excludeAnalysis: !t._excludeAnalysis});
+  await renderTransactions();
+  try{ if(typeof renderAnalytics === 'function') await renderAnalytics(); }catch(e){}
+  try{ if(typeof renderDDPanel === 'function') await renderDDPanel(); }catch(e){}
+}
+
+// Attach a free-text note / tag to a transaction (e.g. label a Revolut transfer
+// "groceries" or "kids stuff"). Notes are per-transaction; categories propagate to
+// similar transactions, notes do not — so you can bulk-categorise then label each one.
+async function addTxnNote(id){
+  if(!id) return;
+  const all = await dbGetAll('transactions');
+  const t = all.find(x => x.id === id);
+  if(!t) return;
+  const note = prompt('Note / tag for this transaction:', t._note || '');
+  if(note === null) return; // cancelled
+  await dbPut('transactions', {...t, _note: note.trim()});
+  await renderTransactions();
+}
 async function txnPeriodNav(dir){
   // Auto-enable the period filter when navigating
   const cb = document.getElementById('txn-period-enabled');
@@ -2133,22 +2566,46 @@ async function renderTransactions(){
     rows = rows.filter(r => r.date && r.date >= sStr && r.date < eStr);
     if(periodLabelEl) periodLabelEl.textContent = periodLabel(range);
     window._txnActivePeriod = {start:sStr, end:eStr};
+    // Show both period totals (spend matches Analytics; income uses the PTSB/BOI rule)
+    if(periodTotalEl){
+      const sp = rows.filter(r=>!r.isCredit && !r.isInternal && !r._excludeAnalysis && !['Income','Savings','Interest','Refund','Internal'].includes(r.category)).reduce((a,r)=>a+(r.amount||0),0);
+      const inc = rows.filter(r=>isIncomeTxn(r)).reduce((a,r)=>a+Math.abs(r.amount||0),0);
+      periodTotalEl.textContent = `Spend €${sp.toFixed(2)} · Income €${inc.toFixed(2)}`;
+    }
   } else {
     if(periodLabelEl) periodLabelEl.textContent = '';
     if(periodTotalEl) periodTotalEl.textContent = '';
     window._txnActivePeriod = null;
   }
-  // Period filter (set when clicking from analytics)
+  // Period filter (set when clicking from analytics) — end is EXCLUSIVE to match salary-period math
   if(window._txnPeriodFrom) rows=rows.filter(r=>r.date>=window._txnPeriodFrom);
-  if(window._txnPeriodTo)   rows=rows.filter(r=>r.date<=window._txnPeriodTo);
-  rows.sort((a,b)=>{ const da=a.date||'',db=b.date||''; return db>da?1:db<da?-1:0; });
-  document.getElementById('txn-count').textContent=`${rows.length} transactions`;
-  // Show period spend total (excludes credits + internal) when period filter active
-  if(periodEnabled && periodTotalEl){
-    const spend = rows.filter(r=>!r.isCredit && !r.isInternal).reduce((a,r)=>a+(r.amount||0),0);
-    periodTotalEl.textContent = `Spend: €${spend.toFixed(2)}`;
+  if(window._txnPeriodTo)   rows=rows.filter(r=>r.date<window._txnPeriodTo);
+  // Income/spend type filter (set when drilling in from the Analytics hero tiles)
+  const typeF=window._txnTypeFilter;
+  if(typeF==='spend'){
+    rows=rows.filter(r=>!r.isCredit && !r.isInternal && !['Income','Savings','Interest','Refund'].includes(r.category));
+  } else if(typeF==='income'){
+    rows=rows.filter(r=>isIncomeTxn(r));
+  } else if(typeF==='all'){
+    rows=rows.filter(r=>!r.isInternal);
   }
+  // Category-set filter (Unbudgeted tile → only the unbudgeted categories)
+  if(Array.isArray(window._txnCatSet) && window._txnCatSet.length){
+    const _set=new Set(window._txnCatSet);
+    rows=rows.filter(r=>_set.has(r.category||'Unknown'));
+  }
+  // Income/Spend view toggle on the period selector (lets you step through periods
+  // and switch between spending and income transactions)
+  const pmode = document.getElementById('txn-period-mode')?.value || '';
+  if(pmode==='spend'){
+    rows=rows.filter(r=>!r.isCredit && !r.isInternal && !['Income','Savings','Interest','Refund','Internal'].includes(r.category));
+  } else if(pmode==='income'){
+    rows=rows.filter(r=>isIncomeTxn(r));
+  }
+  rows.sort((a,b)=>{ const da=a.date||'',db=b.date||''; return db>da?1:db<da?-1:0; });
+  const cntEl=document.getElementById('txn-count'); if(cntEl) cntEl.textContent=`${rows.length} transactions`;
   const wrap=document.getElementById('txn-table-wrap');
+  if(!wrap) return; // page not in DOM yet
   if(!rows.length){wrap.innerHTML='<div class="empty-state">No transactions match filters.</div>';return;}
   wrap.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rad-lg);padding:.75rem 1rem;">`+
     rows.map(r=>{
@@ -2159,6 +2616,16 @@ async function renderTransactions(){
       const amtStr=r.isCredit?`<span class="amt-pos">+€${r.amount.toFixed(2)}</span>`:`<span class="amt-neg">−€${r.amount.toFixed(2)}</span>`;
       const fixBtn=cat==='Unknown'?`<button onclick="quickCategorise('${r.description.replace(/'/g,"\\'")}',this)" style="font-size:10px;color:var(--teal2);background:var(--teal5);border:1px solid var(--teal6);border-radius:4px;padding:1px 6px;cursor:pointer;margin-right:4px;flex-shrink:0;">fix</button>`:'';
       const mapBtn=r.isInternal?`<button onclick="mapTransfer(${r.id||0},'${r.description.replace(/'/g,"\\'").slice(0,30)}')" style="font-size:10px;color:#185FA5;background:#E6F1FB;border:1px solid #B5D4F4;border-radius:4px;padding:1px 6px;cursor:pointer;margin-right:4px;flex-shrink:0;">label</button>`:'';
+      // Reimbursement toggle — only for incoming credits that aren't internal transfers
+      const reimbBtn=(r.isCredit&&!r.isInternal)?`<button onclick="toggleReimbursement(${r.id||0})" title="${r._reimbursement?'Reimbursement — excluded from income and offsetting spend in this category. Click to undo.':'Mark as reimbursement (e.g. a shared-bill repayment): exclude from income and offset spend in this category'}" style="font-size:10px;color:${r._reimbursement?'#fff':'#7a5b00'};background:${r._reimbursement?'#C99A2E':'#FBF0D5'};border:1px solid #E2C26A;border-radius:4px;padding:1px 6px;cursor:pointer;margin-right:4px;flex-shrink:0;">${r._reimbursement?'↩ reimb ✓':'↩ reimb'}</button>`:'';
+      // Mark a debit as an internal transfer to exclude it from spend totals
+      const xferBtn=(!r.isCredit)?`<button onclick="toggleInternal(${r.id||0})" title="${r.isInternal?'Excluded as internal transfer (not counted in spend). Click to undo.':'Mark as internal transfer / exclude from spend totals (e.g. money moved to savings or another of your own accounts)'}" style="font-size:10px;color:${r.isInternal?'#fff':'#5F5E5A'};background:${r.isInternal?'#185FA5':'#F1EFE8'};border:1px solid ${r.isInternal?'#185FA5':'#D8D6CE'};border-radius:4px;padding:1px 6px;cursor:pointer;margin-right:4px;flex-shrink:0;">${r.isInternal?'↔ transfer ✓':'↔ transfer'}</button>`:'';
+      // Exclude-from-analysis toggle — for any row. Removes it from BOTH income and
+      // spend totals (and the surplus), without touching its category. For one-off
+      // items that distort the period: a lump-sum loan overpayment, a stock-sale windfall, etc.
+      const exclBtn=`<button onclick="toggleExcludeAnalysis(${r.id||0})" title="${r._excludeAnalysis?'Excluded from analysis — not counted in income, spend or surplus. Click to undo.':'Exclude from analysis: remove this transaction from income, spend and the surplus (e.g. a one-off loan overpayment or windfall)'}" style="font-size:10px;color:${r._excludeAnalysis?'#fff':'#7A2E2E'};background:${r._excludeAnalysis?'#9E3B3B':'#FBE3E3'};border:1px solid #E2A0A0;border-radius:4px;padding:1px 6px;cursor:pointer;margin-right:4px;flex-shrink:0;">${r._excludeAnalysis?'⊘ excluded ✓':'⊘ exclude'}</button>`;
+      // Free-text note / tag (e.g. label a Revolut transfer "groceries")
+      const noteBtn=`<button onclick="addTxnNote(${r.id||0})" title="${r._note?('Note: '+r._note.replace(/"/g,'&quot;')+' — click to edit'):'Add a note / tag'}" style="font-size:10px;color:${r._note?'#fff':'#5C5A52'};background:${r._note?'#6B6A64':'#F1EFE8'};border:1px solid #D8D6CE;border-radius:4px;padding:1px 6px;cursor:pointer;margin-right:4px;flex-shrink:0;">${r._note?'📝 ✓':'📝'}</button>`;
       // Category edit dropdown for every row
       const catOptions = ALL_CATEGORIES.map(c =>
         `<option value="${c}" ${c===cat?'selected':''}>${c}</option>`
@@ -2168,15 +2635,14 @@ async function renderTransactions(){
         onclick="event.stopPropagation()"
         style="font-size:10px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);max-width:110px;cursor:pointer;flex-shrink:0;"
         title="Change category">${catOptions}</select>`;
-      return`<div class="txn-row" style="${r.isInternal?'opacity:.55':''}">
+      return`<div class="txn-row" style="${(r.isInternal||r._excludeAnalysis)?'opacity:.55':''}">
         <div class="txn-icon" style="background:${bg}">${icon}</div>
         <div class="txn-info">
           <div class="txn-name">${r.description}</div>
-          <div class="txn-cat">${r.date} · ${r.bank?.toUpperCase()}</div>
+          <div class="txn-cat">${r.date} · ${r.bank?.toUpperCase()}${r._note?` · <span style="color:var(--teal2);">📝 ${r._note.replace(/</g,'&lt;')}</span>`:''}</div>
         </div>
-        ${mapBtn}${fixBtn}${catEdit}
-        <div class="txn-amt">${amtStr}</div>
-      </div>`;
+        ${reimbBtn}${xferBtn}${exclBtn}${noteBtn}${mapBtn}${fixBtn}${catEdit}
+        <div class="txn-amt">${amtStr}</div>      </div>`;
     }).join('')+'</div>';
 }
 
@@ -2322,8 +2788,104 @@ async function renderDashDebtOverview(){
 }
 
 // ═══════════════════════════════════════════════════
+// SAVINGS
+// ═══════════════════════════════════════════════════
+
+async function getSavingsTotal(){
+  try{
+    const savings = await dbGetAll('savings');
+    return savings.reduce((a,s)=>a+(parseFloat(s.balance)||0),0);
+  }catch(e){ return 0; }
+}
+
+async function renderSavingsPanel(){
+  const el = document.getElementById('dash-savings-list');
+  const totalEl = document.getElementById('dash-savings-total');
+  if(!el) return;
+
+  const savings = await dbGetAll('savings');
+  const total = savings.reduce((a,s)=>a+(parseFloat(s.balance)||0),0);
+  if(totalEl) totalEl.textContent = `€${total.toLocaleString('en-IE',{minimumFractionDigits:2})}`;
+
+  if(!savings.length){
+    el.innerHTML = '<div style="font-size:13px;color:var(--text2);">No savings accounts yet. Tap "+ Add" to track one.</div>';
+    return;
+  }
+
+  el.innerHTML = savings.slice().sort((a,b)=>(b.balance||0)-(a.balance||0)).map(s=>{
+    const hasTarget = s.target && s.target>0;
+    const pct = hasTarget ? Math.min(100, Math.round((s.balance/s.target)*100)) : 0;
+    const balText = hasTarget
+      ? `€${s.balance.toLocaleString('en-IE',{maximumFractionDigits:0})} of €${s.target.toLocaleString('en-IE',{maximumFractionDigits:0})}`
+      : `€${s.balance.toLocaleString('en-IE',{minimumFractionDigits:2})}`;
+    return `<div class="debt-item">
+      <div class="debt-top">
+        <span class="debt-name" style="cursor:pointer;" title="Click to rename" onclick="editSavingsField(${s.id},'name')">${s.name}</span>
+        <div style="display:flex;gap:6px;align-items:center;">
+          ${hasTarget?`<span class="badge b-green" style="font-size:9px;">${pct}% of goal</span>`:''}
+          <button onclick="deleteSavingsAccount(${s.id})" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--text3);padding:0 2px;" title="Remove">✕</button>
+        </div>
+      </div>
+      ${hasTarget?`<div class="debt-bar-bg"><div class="debt-bar-fill" style="width:${pct}%;background:#1D9E75"></div></div>`:''}
+      <div class="debt-footer">
+        <span class="debt-bal" style="cursor:pointer;color:var(--teal2);" title="Click to update balance" onclick="editSavingsField(${s.id},'balance')">${balText}</span>
+        <span style="font-size:10px;color:var(--text3);cursor:pointer;" title="Click to set/edit goal" onclick="editSavingsField(${s.id},'target')">${hasTarget?'edit goal':'+ set goal'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function addSavingsAccount(){
+  const name = prompt('Savings account name (e.g. Emergency fund, Holiday):');
+  if(!name) return;
+  const balanceStr = prompt('Current balance (€):','0');
+  if(balanceStr===null) return;
+  const balance = parseFloat(String(balanceStr).replace(/[€,]/g,''));
+  if(isNaN(balance)||balance<0){alert('Invalid balance.');return;}
+  const targetStr = prompt('Savings goal / target (€) — leave blank for none:','');
+  const target = targetStr ? parseFloat(String(targetStr).replace(/[€,]/g,'')) : 0;
+  await dbAdd('savings',{name:name.trim(), balance, target: isNaN(target)?0:target, lastUpdated:new Date().toISOString()});
+  await renderSavingsPanel();
+  await refreshBalances();
+}
+
+async function editSavingsField(id, field){
+  const all = await dbGetAll('savings');
+  const s = all.find(x=>x.id===id);
+  if(!s) return;
+  const labels = {name:'Account name', balance:'Current balance (€)', target:'Savings goal (€, 0 = none)'};
+  const current = field==='target' ? (s.target||'') : s[field];
+  const val = prompt(`${labels[field]||field}:`, current);
+  if(val===null) return;
+  if(field==='balance'||field==='target'){
+    const parsed = parseFloat(String(val).replace(/[€,]/g,''));
+    if(isNaN(parsed)||parsed<0){alert('Please enter a valid number.');return;}
+    s[field] = parsed;
+  } else {
+    if(!val.trim()){alert('Name cannot be empty.');return;}
+    s[field] = val.trim();
+  }
+  s.lastUpdated = new Date().toISOString();
+  await dbPut('savings', s);
+  await renderSavingsPanel();
+  await refreshBalances();
+}
+
+async function deleteSavingsAccount(id){
+  if(!confirm('Remove this savings account?')) return;
+  await new Promise((res,rej)=>{
+    const tx=db.transaction('savings','readwrite');
+    const r=tx.objectStore('savings').delete(id);
+    r.onsuccess=()=>res();r.onerror=()=>rej(r.error);
+  });
+  await renderSavingsPanel();
+  await refreshBalances();
+}
+
+// ═══════════════════════════════════════════════════
 // DEBT & HEATMAP
 // ═══════════════════════════════════════════════════
+
 const LOANS={humm:{bal:8120,rate:6.99/100/12,pay:320},attic:{bal:4650,rate:7.9/100/12,pay:185}};
 let extraAttic=0,extraHumm=0;
 
@@ -2693,6 +3255,10 @@ let aiHistory=[];
 let lmModel='local-model';
 
 async function detectLM(){
+  // Only probe the local LM Studio endpoint when it's the active provider.
+  // It's an HTTP endpoint and the app is served over HTTPS, so the browser
+  // blocks it as mixed content — probing otherwise just spams the console.
+  if(getAIProvider()!=='lmstudio'){ updateAIContext(); return; }
   try{
     const r=await fetch((window.LM_BASE||LM_BASE)+'/v1/models',{signal:AbortSignal.timeout(5000)});
     if(r.ok){
@@ -2950,36 +3516,11 @@ function saveGeminiKey(){
   updateAIContext();
 }
 
-function saveBedrockKey(){
-  const key = document.getElementById('bedrock-key')?.value?.trim();
-  if(!key){ alert('Enter your Bedrock API key.'); return; }
-  localStorage.setItem('bedrock_key', key);
-  const badge = document.getElementById('bedrock-status-badge');
-  if(badge){ badge.textContent='saved'; badge.className='badge b-green'; }
-  updateAIContext();
-}
-
-function saveBedrockSecret(){
-  const secret = document.getElementById('bedrock-secret')?.value?.trim();
-  if(!secret){ alert('Enter your AWS secret access key.'); return; }
-  localStorage.setItem('bedrock_secret', secret);
-  const badge = document.getElementById('bedrock-status-badge');
-  if(badge && localStorage.getItem('bedrock_key')){ 
-    badge.textContent='configured'; badge.className='badge b-green'; 
-  }
-  updateAIContext();
-}
-
-function saveBedrockRegion(){
-  const region = document.getElementById('bedrock-region')?.value?.trim();
-  if(!region){ alert('Enter your AWS region.'); return; }
-  localStorage.setItem('bedrock_region', region);
-  const badge = document.getElementById('bedrock-status-badge');
-  if(badge && localStorage.getItem('bedrock_key') && localStorage.getItem('bedrock_secret')){ 
-    badge.textContent='configured'; badge.className='badge b-green'; 
-  }
-  updateAIContext();
-}
+// NOTE: Legacy functions saveBedrockKey / saveBedrockSecret / saveBedrockRegion
+// were removed. They persisted raw AWS access/secret keys in localStorage, which
+// is unsafe in a browser app. Bedrock access now goes exclusively through the
+// API Gateway proxy (saveBedrockProxyUrl + saveBedrockApiKey), which keeps all
+// AWS credentials server-side in the Lambda execution role.
 
 async function callGemini(prompt){
   const key = localStorage.getItem('gemini_key');
@@ -3032,160 +3573,6 @@ async function callBedrock(prompt){
   return data.text || '';
 }
 
-/* eslint-disable */
-async function _deadBedrockDirect(prompt){
-  const accessKey = '__proxy_mode__';
-  const secretKey = '__proxy_mode__';
-  const region = 'proxy';
-  if(!accessKey) throw new Error('No AWS Access Key — add it in Settings');
-  if(!secretKey) throw new Error('No AWS Secret Key — add it in Settings');
-  
-  // Pure JS SHA-256 implementation (works without crypto.subtle in HTTP)
-  function sha256(str) {
-    function rotateRight(n, x) { return (x >>> n) | (x << (32 - n)); }
-    function choice(x, y, z) { return (x & y) ^ (~x & z); }
-    function majority(x, y, z) { return (x & y) ^ (x & z) ^ (y & z); }
-    function sha256_Sigma0(x) { return rotateRight(2, x) ^ rotateRight(13, x) ^ rotateRight(22, x); }
-    function sha256_Sigma1(x) { return rotateRight(6, x) ^ rotateRight(11, x) ^ rotateRight(25, x); }
-    function sha256_sigma0(x) { return rotateRight(7, x) ^ rotateRight(18, x) ^ (x >>> 3); }
-    function sha256_sigma1(x) { return rotateRight(17, x) ^ rotateRight(19, x) ^ (x >>> 10); }
-    
-    const K = [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
-               0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
-               0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-               0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
-               0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
-               0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
-               0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
-               0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2];
-    
-    let msg = unescape(encodeURIComponent(str));
-    let msgLen = msg.length;
-    let blocks = [];
-    for (let i = 0; i < msgLen; i++) blocks[i >> 2] |= msg.charCodeAt(i) << ((3 - (i % 4)) * 8);
-    blocks[msgLen >> 2] |= 0x80 << ((3 - (msgLen % 4)) * 8);
-    blocks[(((msgLen + 8) >> 6) << 4) + 15] = msgLen * 8;
-    
-    let H = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
-    let W = new Array(64);
-    
-    for (let i = 0; i < blocks.length; i += 16) {
-      let a = H[0], b = H[1], c = H[2], d = H[3], e = H[4], f = H[5], g = H[6], h = H[7];
-      
-      for (let t = 0; t < 64; t++) {
-        if (t < 16) W[t] = blocks[i + t] | 0;
-        else W[t] = (sha256_sigma1(W[t-2]) + W[t-7] + sha256_sigma0(W[t-15]) + W[t-16]) | 0;
-        
-        let T1 = (h + sha256_Sigma1(e) + choice(e, f, g) + K[t] + W[t]) | 0;
-        let T2 = (sha256_Sigma0(a) + majority(a, b, c)) | 0;
-        h = g; g = f; f = e; e = (d + T1) | 0; d = c; c = b; b = a; a = (T1 + T2) | 0;
-      }
-      
-      H[0] = (H[0] + a) | 0; H[1] = (H[1] + b) | 0; H[2] = (H[2] + c) | 0; H[3] = (H[3] + d) | 0;
-      H[4] = (H[4] + e) | 0; H[5] = (H[5] + f) | 0; H[6] = (H[6] + g) | 0; H[7] = (H[7] + h) | 0;
-    }
-    
-    return H.map(h => ('00000000' + h.toString(16)).slice(-8)).join('');
-  }
-  
-  function hexToBytes(hex) {
-    const bytes = [];
-    for (let i = 0; i < hex.length; i += 2) {
-      bytes.push(parseInt(hex.substr(i, 2), 16));
-    }
-    return bytes;
-  }
-  
-  function hmacSha256(keyBytes, message) {
-    const blockSize = 64;
-    let key = typeof keyBytes === 'string' ? 
-      keyBytes.split('').map(c => c.charCodeAt(0)) : 
-      Array.isArray(keyBytes) ? keyBytes : hexToBytes(keyBytes);
-    
-    if (key.length > blockSize) {
-      const hash = sha256(String.fromCharCode.apply(null, key));
-      key = hexToBytes(hash);
-    }
-    
-    while (key.length < blockSize) key.push(0);
-    
-    const oKeyPad = key.map(b => b ^ 0x5c);
-    const iKeyPad = key.map(b => b ^ 0x36);
-    
-    const innerHash = sha256(String.fromCharCode.apply(null, iKeyPad) + message);
-    const innerBytes = hexToBytes(innerHash);
-    const outerHash = sha256(String.fromCharCode.apply(null, oKeyPad.concat(innerBytes)));
-    
-    return hexToBytes(outerHash);
-  }
-  
-  function getSignatureKey(key, dateStamp, regionName, serviceName) {
-    const kDate = hmacSha256('AWS4' + key, dateStamp);
-    const kRegion = hmacSha256(kDate, regionName);
-    const kService = hmacSha256(kRegion, serviceName);
-    const kSigning = hmacSha256(kService, 'aws4_request');
-    return kSigning;
-  }
-  
-  // Use Claude 3.5 Sonnet on Bedrock
-  const modelId = 'anthropic.claude-3-5-sonnet-20241022-v2:0';
-  const service = 'bedrock';
-  const method = 'POST';
-  const host = `bedrock-runtime.${region}.amazonaws.com`;
-  const path = `/model/${modelId}/invoke`;
-  const now = new Date();
-  const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, '');
-  const dateStamp = amzDate.substring(0, 8);
-  
-  // Prepare request body
-  const body = JSON.stringify({
-    anthropic_version: "bedrock-2023-05-31",
-    max_tokens: 2048,
-    temperature: 0.1,
-    messages: [{ role: "user", content: prompt }]
-  });
-  
-  // Create canonical request
-  const payloadHash = sha256(body);
-  const canonicalHeaders = `host:${host}\nx-amz-date:${amzDate}\n`;
-  const signedHeaders = 'host;x-amz-date';
-  const canonicalRequest = `${method}\n${path}\n\n${canonicalHeaders}\n${signedHeaders}\n${payloadHash}`;
-  
-  // Create string to sign
-  const algorithm = 'AWS4-HMAC-SHA256';
-  const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
-  const stringToSign = `${algorithm}\n${amzDate}\n${credentialScope}\n${sha256(canonicalRequest)}`;
-  
-  // Calculate signature
-  const signingKey = getSignatureKey(secretKey, dateStamp, region, service);
-  const signatureBytes = hmacSha256(signingKey, stringToSign);
-  const signature = signatureBytes.map(b => ('0' + b.toString(16)).slice(-2)).join('');
-  
-  // Authorization header
-  const authHeader = `${algorithm} Credential=${accessKey}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
-  
-  // Make request
-  const url = `https://bedrock-runtime.${region}.amazonaws.com/model/${modelId}/invoke`;
-  const r = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Amz-Date': amzDate,
-      'Authorization': authHeader,
-      'Accept': 'application/json'
-    },
-    body: body,
-    signal: AbortSignal.timeout(60000)
-  });
-  
-  if(!r.ok){
-    const err = await r.text();
-    throw new Error('Bedrock error (' + r.status + '): ' + err);
-  }
-  
-  const d = await r.json();
-  return d.content?.[0]?.text || '';
-}
 
 async function callAI(prompt){
   const provider = getAIProvider();
@@ -3243,8 +3630,10 @@ function saveBedrockProxyUrl(){
     alert('URL must start with https://'); return;
   }
   localStorage.setItem('bedrock_proxy_url', url);
-  localStorage.setItem('bedrock_key', 'proxy-mode');
-  localStorage.setItem('bedrock_region', 'proxy-mode');
+  // Clear any legacy raw-credential keys from older builds
+  localStorage.removeItem('bedrock_key');
+  localStorage.removeItem('bedrock_secret');
+  localStorage.removeItem('bedrock_region');
   const badge = document.getElementById('bedrock-status-badge');
   if(badge){ badge.textContent = 'configured'; badge.className = 'badge b-green'; }
   updateAIContext();
@@ -3590,72 +3979,170 @@ async function detectAndSyncDDs(txns){
   const stored = await dbGetAll('directDebits');
   const storedByKey = {};
   for(const d of stored) storedByKey[d.detectedKey] = d;
-
-  // Include Fixed, Subscriptions, and anything that looks like a DD
   const candidates = txns.filter(t =>
     !t.isCredit && !t.isInternal &&
     (t.category === 'Fixed' || t.category === 'Subscriptions' || looksLikeDD(t.description))
   );
-
-  // Group by normalised key
   const groups = {};
   for(const t of candidates){
-    const norm = t.description
-      .replace(/^\d{2}[A-Z]{3}\s*/i,'')
-      .replace(/\s+\d{2}\/\d{2}.*/,'')
-      .trim().toLowerCase().slice(0,28);
-    if(!groups[norm]) groups[norm] = {key:norm, desc:t.description, dates:[], amounts:[], banks:[]};
-    groups[norm].dates.push(t.date);
-    groups[norm].amounts.push(t.amount);
-    groups[norm].banks.push(t.bank||'');
+    const norm = t.description.replace(/^\d{2}[A-Z]{3}\s*/i,'').replace(/\s+\d{2}\/\d{2}.*/,'').trim().toLowerCase().slice(0,28);
+    if(!groups[norm]) groups[norm]={key:norm,desc:t.description,dates:[],amounts:[],banks:[],isStrongDD:looksLikeDD(t.description)};
+    groups[norm].dates.push(t.date); groups[norm].amounts.push(t.amount); groups[norm].banks.push(t.bank||'');
+    if(looksLikeDD(t.description)) groups[norm].isStrongDD=true;
   }
-
-  // Only keep genuinely recurring (2+ distinct months)
+  // Strong DD patterns (DD prefix, loan, mortgage, insurance...) -> 1 month is enough.
+  // General Fixed/Subscriptions -> require 2+ months to avoid one-off false positives.
   const recurring = Object.values(groups).filter(g => {
-    const months = new Set(g.dates.map(d => d.slice(0,7)));
-    return months.size >= 2;
+    const months = new Set(g.dates.map(d=>d.slice(0,7)));
+    return g.isStrongDD ? months.size >= 1 : months.size >= 2;
   });
-
-  // Upsert — but never re-create a deleted entry
   for(const g of recurring){
-    const existing = storedByKey[g.key];
+    const existing=storedByKey[g.key];
+    const months=new Set(g.dates.map(d=>d.slice(0,7)));
+    const days=g.dates.map(d=>parseInt(d.slice(8,10)));
+    const dayMode=days.sort((a,b)=>days.filter(v=>v===b).length-days.filter(v=>v===a).length)[0];
+    const avgAmt=g.amounts.reduce((a,b)=>a+b,0)/g.amounts.length;
+    const bankCounts={}; g.banks.forEach(b=>bankCounts[b]=(bankCounts[b]||0)+1);
+    const detectedBank=Object.entries(bankCounts).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
     if(existing){
-      // Already in store — if user deleted it, leave it deleted
-      if(existing._deleted) continue;
-      // Only update auto-detected fields if user hasn't manually edited
-      if(!existing._userEdited){
-        const days = g.dates.map(d => parseInt(d.slice(8,10)));
-        const dayMode = days.sort((a,b) =>
-          days.filter(v=>v===b).length - days.filter(v=>v===a).length)[0];
-        const avgAmt = g.amounts.reduce((a,b)=>a+b,0)/g.amounts.length;
-        await dbPut('directDebits', {...existing, amount:parseFloat(avgAmt.toFixed(2)), dayOfMonth:dayMode});
+      if(existing._deleted){
+        // FIXED: Respect user deletions — never resurrect DDs that were manually deleted
+        // Only skip resurrection if this was explicitly deleted by the user
+        if(existing._userEdited){
+          // User explicitly deleted this DD — respect that choice permanently
+          continue;
+        }
+        // For system-deleted DDs that weren't user-edited, only resurrect if seen in very recent history (1 month)
+        // This prevents old/stale auto-detections from coming back
+        if(months.size>=2) continue;
+        await dbPut('directDebits',{...existing,amount:parseFloat(avgAmt.toFixed(2)),dayOfMonth:dayMode,
+          bank:detectedBank||existing.bank,_deleted:false,active:true,_userEdited:false,_manualPaid:null,_paused:false});
+        continue;
       }
+      if(!existing._userEdited) await dbPut('directDebits',{...existing,amount:parseFloat(avgAmt.toFixed(2)),dayOfMonth:dayMode});
     } else {
-      // New detection — insert
-      const days = g.dates.map(d => parseInt(d.slice(8,10)));
-      const dayMode = days.sort((a,b) =>
-        days.filter(v=>v===b).length - days.filter(v=>v===a).length)[0];
-      const avgAmt = g.amounts.reduce((a,b)=>a+b,0)/g.amounts.length;
-      // Pick the most common bank for this DD
-      const bankCounts = {};
-      g.banks.forEach(b => bankCounts[b]=(bankCounts[b]||0)+1);
-      const detectedBank = Object.entries(bankCounts).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
-      await dbAdd('directDebits', {
-        detectedKey: g.key,
-        name: g.desc.slice(0,40),
-        amount: parseFloat(avgAmt.toFixed(2)),
-        dayOfMonth: dayMode,
-        active: true,
-        _userEdited: false,
-        _deleted: false,
-        bank: detectedBank
+      // Before creating a new DD, check if ANY deleted DD (regardless of key) matches this description
+      // This prevents resurrection when key normalization changes or doesn't match exactly
+      const anyDeletedMatch = stored.find(d => {
+        if(!d._deleted || !d._userEdited) return false;
+        
+        // Multi-strategy matching to catch all variations
+        const storedName = (d.name || '').toLowerCase().trim();
+        const storedKey = (d.detectedKey || '').toLowerCase().trim();
+        const newDesc = g.key.toLowerCase().trim();
+        const newFullDesc = g.desc.toLowerCase().trim();
+        
+        // Strategy 1: Exact match on normalized keys
+        if(storedKey && newDesc && storedKey === newDesc) return true;
+        
+        // Strategy 2: Ultra-aggressive normalization - strip ALL non-alphanumeric
+        // This catches "SSE AIRTRICITY" vs "SSEAIRTRICITY" vs "DD SSE AIRTRICITY" etc.
+        const ultraNorm = s => s.replace(/[^a-z0-9]/g, '').toLowerCase();
+        const storedUltra = ultraNorm(storedName + ' ' + storedKey);
+        const newUltra = ultraNorm(newDesc + ' ' + newFullDesc);
+        
+        // Enhanced: if ultra-normalized versions match with at least 6 chars, it's the same DD
+        // Lowered from 8 to catch shorter company names like "SSE"
+        if(storedUltra.length >= 6 && newUltra.length >= 6){
+          // Check if one contains the other (handles prefix/suffix variations)
+          if(storedUltra.includes(newUltra) || newUltra.includes(storedUltra)){
+            console.log(`🎯 Match found (contains): stored="${storedUltra.slice(0,30)}" new="${newUltra.slice(0,30)}"`);
+            return true;
+          }
+          // Check for substantial overlap (lowered to 75% from 85% for better fuzzy matching)
+          const shorter = storedUltra.length < newUltra.length ? storedUltra : newUltra;
+          const longer = storedUltra.length >= newUltra.length ? storedUltra : newUltra;
+          const matchLen = Math.max(6, Math.floor(shorter.length * 0.75));
+          if(longer.includes(shorter.slice(0, matchLen))){
+            console.log(`🎯 Match found (overlap): stored="${storedUltra.slice(0,30)}" new="${newUltra.slice(0,30)}"`);
+            return true;
+          }
+        }
+        
+        // Strategy 3: Enhanced substring matching with reduced threshold
+        // Lowered to catch more variations (50% from 55%)
+        const minMatchLen = Math.max(8, Math.min(storedName.length, newDesc.length) * 0.50);
+        const slice1 = storedName.slice(0, minMatchLen);
+        const slice2 = newDesc.slice(0, minMatchLen);
+        if(slice1 && slice2 && slice1.length >= 8 && slice2.length >= 8 && (storedName.includes(slice2) || newDesc.includes(slice1))){
+          console.log(`🎯 Match found (substring): stored="${slice1}" new="${slice2}"`);
+          return true;
+        }
+        
+        // Strategy 4: Token-based matching - extract key words (3+ chars) and check overlap
+        const extractTokens = s => {
+          return s.replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(t => t.length >= 3);
+        };
+        const storedTokens = extractTokens(storedName + ' ' + storedKey);
+        const newTokens = extractTokens(newDesc + ' ' + newFullDesc);
+        
+        if(storedTokens.length > 0 && newTokens.length > 0){
+          const commonTokens = storedTokens.filter(t => newTokens.some(nt => 
+            nt.includes(t) || t.includes(nt) || (t.length >= 4 && nt.length >= 4 && (
+              t.slice(0,4) === nt.slice(0,4) // first 4 chars match (lowered from 5)
+            ))
+          ));
+          // Reduced threshold to 40% for better fuzzy matching (from 45%)
+          const threshold = Math.min(storedTokens.length, newTokens.length) * 0.40;
+          if(commonTokens.length >= threshold){
+            console.log(`🎯 Match found (tokens): ${commonTokens.length}/${Math.min(storedTokens.length, newTokens.length)} tokens matched`);
+            return true;
+          }
+        }
+        
+        // Strategy 5: Check the full original description against stored name (lowered from 15 to 12 chars)
+        if(storedName.length >= 12 && newFullDesc.includes(storedName)){
+          console.log(`🎯 Match found (full desc in new): "${storedName}"`);
+          return true;
+        }
+        if(newDesc.length >= 12 && storedName.includes(newDesc)){
+          console.log(`🎯 Match found (new desc in stored): "${newDesc}"`);
+          return true;
+        }
+        if(newFullDesc.length >= 12 && storedName.includes(newFullDesc)){
+          console.log(`🎯 Match found (new full desc in stored): "${newFullDesc.slice(0,30)}"`);
+          return true;
+        }
+        
+        // Strategy 6: Levenshtein-style matching for close variations
+        // Calculate similarity score between ultra-normalized strings
+        if(storedUltra.length >= 6 && newUltra.length >= 6){
+          const maxLen = Math.max(storedUltra.length, newUltra.length);
+          const minLen = Math.min(storedUltra.length, newUltra.length);
+          // If lengths are similar and strings start the same way, likely a match
+          // Increased tolerance from 3 to 5 chars difference
+          if(Math.abs(storedUltra.length - newUltra.length) <= 5){
+            const compareLen = Math.min(minLen, 12);
+            let matches = 0;
+            for(let i = 0; i < compareLen; i++){
+              if(storedUltra[i] === newUltra[i]) matches++;
+            }
+            // Lowered from 80% to 75% of first 12 chars match = same DD
+            if(matches >= compareLen * 0.75){
+              console.log(`🎯 Match found (char-by-char): ${matches}/${compareLen} chars matched`);
+              return true;
+            }
+          }
+        }
+        
+        return false;
       });
+      
+      if(anyDeletedMatch){
+        // This matches a user-deleted DD — skip creating it
+        console.log(`🚫 Skipping resurrection of deleted DD: "${g.key}" (matches deleted: "${anyDeletedMatch.name}") [detectedKey: "${anyDeletedMatch.detectedKey}"]`);
+        continue;
+      }
+      
+      // Debug: log when we're about to create a new DD so you can see if it should have been blocked
+      console.log(`➕ Creating new DD: "${g.desc.slice(0,40)}" [key: "${g.key}"]`);
+      
+      await dbAdd('directDebits',{detectedKey:g.key,name:g.desc.slice(0,40),amount:parseFloat(avgAmt.toFixed(2)),
+        dayOfMonth:dayMode,active:true,_userEdited:false,_deleted:false,bank:detectedBank});
     }
   }
-
-  // Return only non-deleted entries
-  const all = await dbGetAll('directDebits');
-  return all.filter(d => !d._deleted);
+  const all=await dbGetAll('directDebits');
+  return all.filter(d=>!d._deleted);
 }
 
 // Work out which DDs are pending vs paid this month
@@ -3885,165 +4372,125 @@ async function classifyDDs(dds, txns){
     console.log('Period transactions:', thisPeriodTxns.map(t => ({date: t.date, desc: t.description?.slice(0,40), amount: t.amount})));
   }
 
+  // ── Shared helpers ──────────────────────────────────────────────────────────
+  const todayStr = now.toISOString().slice(0,10);
+
+  // Normalise a description for fuzzy matching
+  const normDesc = s => (s||'').toLowerCase()
+    .replace(/\d+[\/\\]\d+/g,'').replace(/\b\d{2,}\b/g,'')
+    .replace(/[^a-z\s]/g,' ').replace(/^(pos|dd|tkn|ach|bacs|sepa)\s+/,'')
+    .replace(/\s+/g,' ').trim();
+
+  // Longest common substring length
+  const lcsLen = (a, b) => {
+    let best = 0;
+    const dp = Array.from({length:a.length+1},()=>new Array(b.length+1).fill(0));
+    for(let i=1;i<=a.length;i++) for(let j=1;j<=b.length;j++){
+      dp[i][j] = a[i-1]===b[j-1] ? dp[i-1][j-1]+1 : 0;
+      if(dp[i][j]>best) best=dp[i][j];
+    }
+    return best;
+  };
+
+  const descMatches = (nd, key) => {
+    if(!key||!nd) return false;
+    const c = lcsLen(nd, key);
+    return c>=7 && c>=Math.min(nd.length,key.length)*0.55;
+  };
+
+  const amtMatches = (tAmt, ddAmt) => {
+    const diff = Math.abs(tAmt - ddAmt);
+    return ddAmt<10 ? diff<0.50 : ddAmt<100 ? diff<ddAmt*0.05 : diff<Math.min(ddAmt*0.10,20);
+  };
+
+  const txnMatchesDD = (t, dd) => {
+    const nd = normDesc(t.description);
+    return (descMatches(nd, normDesc(dd.detectedKey)) || descMatches(nd, normDesc(dd.name)))
+        && amtMatches(t.amount, dd.amount);
+  };
+
+  // All occurrence dates within [periodStart, periodEnd) for a given dayOfMonth.
+  // A cross-month period can yield 0, 1, or 2 occurrences for the same day number.
+  const occurrencesInPeriod = (dayOfMonth) => {
+    if(!periodStart||!periodEnd) return [];
+    const pS=new Date(periodStart+'T00:00:00'), pE=new Date(periodEnd+'T00:00:00');
+    const results=[]; let y=pS.getFullYear(), m=pS.getMonth();
+    const endY=pE.getFullYear(), endM=pE.getMonth();
+    while(y<endY||(y===endY&&m<=endM)){
+      const c=new Date(y,m,dayOfMonth);
+      if(c.getMonth()===m){ const s=c.toISOString().slice(0,10); if(s>=periodStart&&s<periodEnd) results.push(s); }
+      m++; if(m>11){m=0;y++;}
+    }
+    return results;
+  };
+
   return dds.filter(d => d.active && !d._deleted).map(dd => {
-    // Check if this DD is due THIS PERIOD (not just this month)
     const frequency = (dd.frequency === 0) ? 0 : (dd.frequency || 1);
-    let dueThisMonth = true;
-    
-    // Check if DD day falls within current salary period
-    if(periodStart && periodEnd){
-      // Build actual dates for the DD in the current period
-      const startDate = new Date(periodStart);
-      const endDate = new Date(periodEnd);
-      
-      // Check if DD day falls within the period
-      const startYear = startDate.getFullYear();
-      const startMonth = startDate.getMonth();
-      const startDay = startDate.getDate();
-      const endYear = endDate.getFullYear();
-      const endMonth = endDate.getMonth();
-      const endDay = endDate.getDate();
-      
-      let ddFallsInPeriod = false;
-      
-      // Check if DD day exists in start month and falls after period start
-      if(dd.dayOfMonth >= startDay){
-        const ddDateInStartMonth = new Date(startYear, startMonth, dd.dayOfMonth);
-        // Make sure the date is valid (e.g., April 31st doesn't exist)
-        if(ddDateInStartMonth.getMonth() === startMonth && 
-           ddDateInStartMonth >= startDate && ddDateInStartMonth < endDate){
-          ddFallsInPeriod = true;
-        }
-      }
-      
-      // Check if DD day exists in end month and falls before period end
-      // Only include if dayOfMonth < endDay (exclusive end)
-      if(endMonth !== startMonth && dd.dayOfMonth < endDay){
-        const ddDateInEndMonth = new Date(endYear, endMonth, dd.dayOfMonth);
-        // Make sure the date is valid
-        if(ddDateInEndMonth.getMonth() === endMonth &&
-           ddDateInEndMonth >= startDate && ddDateInEndMonth < endDate){
-          ddFallsInPeriod = true;
-        }
-      }
-      
-      if(dd.dayOfMonth >= 28 && dd.dayOfMonth <= 31){
-        console.log(`DD ${dd.name} on day ${dd.dayOfMonth}: startDay=${startDay}, endDay=${endDay}, fallsInPeriod=${ddFallsInPeriod}`);
-      }
-      
-      dueThisMonth = ddFallsInPeriod;
-    }
-    
-    // For non-monthly frequencies, check if it's actually due
-    if(frequency === 0){
-      dueThisMonth = true; // Weekly — always show as recurring/pending
-    } else if(frequency > 1 && dueThisMonth){
-      // Find last occurrence in transaction history
-      const allMatch = txns.filter(t => {
-        if(t.isCredit||t.isInternal) return false;
-        const normM = s => s.toLowerCase().replace(/\d+[\/\\]\d+/g,'').replace(/\b\d{2,}\b/g,'').replace(/[^a-z\s]/g,' ').replace(/^(pos|dd|tkn|ach|bacs|sepa)\s+/,'').replace(/\s+/g,' ').trim();
-        const lcsM = (a,b) => {let best=0;const dp=Array.from({length:a.length+1},()=>new Array(b.length+1).fill(0));for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++){dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]+1:0;if(dp[i][j]>best)best=dp[i][j];}return best;};
-        const matchM = (desc, key) => { if(!key||!desc) return false; const c=lcsM(desc,key); return c>=7&&c>=Math.min(desc.length,key.length)*0.55; };
-        const ndM=normM(t.description), nkM=normM(dd.detectedKey), nnM=normM(dd.name);
-        const diffM=Math.abs(t.amount-dd.amount);
-        const amtM=dd.amount<10?diffM<0.50:dd.amount<100?diffM<dd.amount*0.05:diffM<Math.min(dd.amount*0.10,20);
-        return (matchM(ndM,nkM)||matchM(ndM,nnM)) && amtM;
-      }).sort((a,b)=>{ const da=a.date||'',db=b.date||''; return db>da?1:db<da?-1:0; });
-      if(allMatch.length>0){
-        const lastDate = new Date(allMatch[0].date);
-        const monthsSince = (year-lastDate.getFullYear())*12 + (month-lastDate.getMonth());
-        dueThisMonth = monthsSince >= frequency;
-      }
-      // If it appeared this period already, always show it
-      if(thisPeriodTxns.some(t=>{
-        const normM = s => s.toLowerCase().replace(/\d+[\/\\]\d+/g,'').replace(/\b\d{2,}\b/g,'').replace(/[^a-z\s]/g,' ').replace(/^(pos|dd|tkn|ach|bacs|sepa)\s+/,'').replace(/\s+/g,' ').trim();
-        const lcsM = (a,b) => {let best=0;const dp=Array.from({length:a.length+1},()=>new Array(b.length+1).fill(0));for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++){dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]+1:0;if(dp[i][j]>best)best=dp[i][j];}return best;};
-        const matchM = (desc, key) => { if(!key||!desc) return false; const c=lcsM(desc,key); return c>=7&&c>=Math.min(desc.length,key.length)*0.55; };
-        const ndM=normM(t.description), nkM=normM(dd.detectedKey), nnM=normM(dd.name);
-        const diffM=Math.abs(t.amount-dd.amount);
-        const amtM=dd.amount<10?diffM<0.50:dd.amount<100?diffM<dd.amount*0.05:diffM<Math.min(dd.amount*0.10,20);
-        return (matchM(ndM,nkM)||matchM(ndM,nnM)) && amtM;
-      })) dueThisMonth = true;
-    } // end frequency > 1
 
-    // Has this DD been paid this period already?
-    const paid = dd._manualPaid === true ? true :
-      dd._manualPaid === false ? false :
-      thisPeriodTxns.some(t => {
-        // Normalise: strip date fragments, punctuation, common DD prefixes
-        const norm = s => s.toLowerCase()
-          .replace(/\d+[\/\\]\d+/g,'')   // strip dates like 25/03
-          .replace(/\b\d{2,}\b/g,'')       // strip standalone numbers
-          .replace(/[^a-z\s]/g,' ')         // strip punctuation
-          .replace(/^(pos|dd|tkn|ach|bacs|sepa)\s+/,'') // strip bank prefixes
-          .replace(/\s+/g,' ').trim();
-
-        const nd = norm(t.description);
-        const nk = norm(dd.detectedKey);
-        const nn = norm(dd.name);
-
-        // Longest common substring — handles reordering (e.g. "vodafone ireland dd" vs "dd vodafone ireland")
-        const lcs = (a,b) => {
-          let best=0, m=a.length, n=b.length;
-          const dp=Array.from({length:m+1},()=>new Array(n+1).fill(0));
-          for(let i=1;i<=m;i++) for(let j=1;j<=n;j++){
-            dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]+1:0;
-            if(dp[i][j]>best)best=dp[i][j];
-          }
-          return best;
-        };
-
-        const descMatch = (key) => {
-          if(!key||!nd) return false;
-          const common=lcs(nd,key);
-          return common>=7 && common>=Math.min(nd.length,key.length)*0.55;
-        };
-
-        // Tiered amount tolerance: tight for small amounts, looser for large
-        const diff=Math.abs(t.amount-dd.amount);
-        const amtMatch = dd.amount < 10   ? diff < 0.50
-                       : dd.amount < 100  ? diff < dd.amount*0.05
-                       :                    diff < Math.min(dd.amount*0.10, 20);
-
-        return (descMatch(nk)||descMatch(nn)) && amtMatch;
-      });
-
-    // Calculate actual days until next occurrence (never negative in a new period)
-    let daysUntil;
-    if(dd.dayOfMonth >= today){
-      // Due later this month
-      daysUntil = dd.dayOfMonth - today;
+    // 1. All occurrences of this DD within the period
+    let allOccurrences = [];
+    if(frequency===0){
+      allOccurrences=[todayStr]; // weekly sentinel
+    } else if(frequency===1){
+      allOccurrences=occurrencesInPeriod(dd.dayOfMonth);
     } else {
-      // Due in next month — calculate days remaining in current month + target day
-      const daysInThisMonth = new Date(year, month + 1, 0).getDate();
-      daysUntil = (daysInThisMonth - today) + dd.dayOfMonth;
+      const hist=txns.filter(t=>!t.isCredit&&!t.isInternal&&txnMatchesDD(t,dd))
+        .sort((a,b)=>(b.date||'')>(a.date||'')?1:-1);
+      let include=false;
+      if(hist.length>0){
+        const mSince=(year-new Date(hist[0].date).getFullYear())*12+(month-new Date(hist[0].date).getMonth());
+        include=mSince>=frequency;
+        if(thisPeriodTxns.some(t=>txnMatchesDD(t,dd))) include=true;
+      } else { include=occurrencesInPeriod(dd.dayOfMonth).length>0; }
+      allOccurrences=include?occurrencesInPeriod(dd.dayOfMonth):[];
+    }
+    const dueThisMonth = allOccurrences.length>0;
+
+    // 2. Active occurrence: earliest upcoming, else most recent past
+    let activeOccurrence=null;
+    if(dueThisMonth){
+      const up=allOccurrences.filter(d=>d>=todayStr);
+      activeOccurrence=up.length>0?up[0]:allOccurrences[allOccurrences.length-1];
     }
 
-    // Safe-to-spend logic:
-    // A DD reduces your working balance ONLY if:
-    //   1. It hasn't been paid yet this month, AND
-    //   2. It falls BEFORE payday (i.e. dayOfMonth < payday)
-    // DDs on payday or after are always covered by incoming salary —
-    // we never deduct them from the current balance regardless of whether
-    // salary has physically arrived yet.
-    const isPostPayday = dd.dayOfMonth >= payday; // on or after payday = salary covers it (pre-salary)
-    const isPaused = dd._paused === true;
-    // Safe-to-spend logic:
-    // Pre-salary:  only deduct pre-payday DDs (post-payday DDs will be covered by incoming salary)
-    // Post-salary: deduct ALL unpaid DDs in the period — salary is already in the balance
-    const countsAgainstBalance = !paid && !isPaused && dueThisMonth && !isPostPayday;
+    // 3. Paid? — check only near the active occurrence (±5 days)
+    //    Prevents a June 26 payment from masking the still-upcoming July 26 occurrence.
+    let paid=false;
+    if(dd._manualPaid===true){ paid=true; }
+    else if(dd._manualPaid===false){ paid=false; }
+    else if(dueThisMonth&&activeOccurrence){
+      const occD=new Date(activeOccurrence+'T00:00:00');
+      const wS=new Date(occD); wS.setDate(wS.getDate()-5);
+      const wE=new Date(Math.min(occD.getTime()+86400000,new Date(todayStr+'T00:00:00').getTime()+86400000));
+      const wSStr=wS.toISOString().slice(0,10), wEStr=wE.toISOString().slice(0,10);
+      paid=thisPeriodTxns.some(t=>t.date>=wSStr&&t.date<wEStr&&txnMatchesDD(t,dd));
+      // Fallback: past occurrence, no window match — accept any period match
+      if(!paid&&activeOccurrence<todayStr) paid=thisPeriodTxns.some(t=>txnMatchesDD(t,dd));
+    }
 
-    return {
-      ...dd,
-      paid,
-      daysUntil,
-      dueThisMonth,
-      overdue: false, // daysUntil is always >= 0 with proper calculation
-      isPostPayday,
-      countsAgainstBalance,
-      salaryEffectivelyHere,
-      payday
-    };
+    // 4. Days until active occurrence
+    let daysUntil=0;
+    if(dueThisMonth&&activeOccurrence){
+      daysUntil=Math.max(0,Math.round((new Date(activeOccurrence+'T00:00:00')-new Date(todayStr+'T00:00:00'))/86400000));
+    } else if(!periodStart){
+      daysUntil=dd.dayOfMonth>=today?dd.dayOfMonth-today:(new Date(year,month+1,0).getDate()-today)+dd.dayOfMonth;
+    }
+
+    // 5. isPostPayday (salary-period aware)
+    const isPaused=dd._paused===true;
+    let isPostPayday;
+    if(periodStart&&periodEnd&&salaryDates.length>=2){
+      if(salaryEffectivelyHere){ isPostPayday=false; }
+      else{
+        const pSD=new Date(periodStart+'T00:00:00').getDate();
+        isPostPayday=activeOccurrence?activeOccurrence>=periodStart:dd.dayOfMonth>=pSD;
+      }
+    } else { isPostPayday=dd.dayOfMonth>=payday; }
+
+    const countsAgainstBalance=!paid&&!isPaused&&dueThisMonth&&!isPostPayday;
+
+    return {...dd,paid,daysUntil,dueThisMonth,activeOccurrence,allOccurrences,
+      overdue:false,isPostPayday,countsAgainstBalance,salaryEffectivelyHere,payday};
   });
 }
 
@@ -4074,9 +4521,9 @@ async function renderDDPanel(txns){
     //  1. before-payday & unpaid & not paused  -> counts against safe-to-spend
     //  2. paused & unpaid                      -> shown greyed, not counted
     //  3. post-payday & unpaid & not paused     -> covered by next salary (next period)
-    const beforePayday = classified.filter(d=>!d.paid && !d._paused && d.dueThisMonth && !d.isPostPayday).sort((a,b)=>a.dayOfMonth-b.dayOfMonth);
-    const pausedList   = classified.filter(d=>!d.paid && d._paused && d.dueThisMonth).sort((a,b)=>a.dayOfMonth-b.dayOfMonth);
-    const nextSalary   = classified.filter(d=>!d.paid && !d._paused && d.dueThisMonth && d.isPostPayday).sort((a,b)=>a.dayOfMonth-b.dayOfMonth);
+    const beforePayday = classified.filter(d=>!d.paid && !d._paused && d.dueThisMonth && !d.isPostPayday).sort((a,b)=>(a.daysUntil??999)-(b.daysUntil??999));
+    const pausedList   = classified.filter(d=>!d.paid && d._paused && d.dueThisMonth).sort((a,b)=>(a.daysUntil??999)-(b.daysUntil??999));
+    const nextSalary   = classified.filter(d=>!d.paid && !d._paused && d.dueThisMonth && d.isPostPayday).sort((a,b)=>(a.daysUntil??999)-(b.daysUntil??999));
     const pending = beforePayday; // legacy name reused below for paid-list check
 
     // Pending summary = before-payday total (the figure that actually reduces safe-to-spend)
@@ -4086,7 +4533,7 @@ async function renderDDPanel(txns){
       pendingSummaryEl.textContent = pendingTotal>0 ? `€${pendingTotal.toFixed(2)}` : '€0.00';
     }
 
-    const paidList = classified.filter(d=>d.paid&&d.dueThisMonth).sort((a,b)=>a.dayOfMonth-b.dayOfMonth);
+    const paidList = classified.filter(d=>d.paid&&d.dueThisMonth).sort((a,b)=>(a.daysUntil??999)-(b.daysUntil??999));
 
     if(!beforePayday.length && !pausedList.length && !nextSalary.length && !paidList.length){
       billsEl.innerHTML='<div style="font-size:12px;color:var(--teal6);">No DDs due this period ✓</div>';
@@ -4159,17 +4606,19 @@ async function renderDDPanel(txns){
       if(safeSubEl) safeSubEl.textContent='Add account balances to calculate';
     } else {
       safeEl.textContent=`€${safe.toFixed(2)}`;
-      // Subtitle uses ONLY before-payday DDs (the figure actually deducted from safe-to-spend)
+      // Subtitle uses pending DDs that count against the current balance
       const counted = classified.filter(d => d.countsAgainstBalance);
       const salaryHere = classified[0]?.salaryEffectivelyHere;
       const payday     = classified[0]?.payday;
       let sub = '';
       if(counted.length){
         const countedSum = counted.reduce((a,d)=>a+d.amount,0);
-        sub = `After ${counted.length} DD${counted.length!==1?'s':''} before payday (€${countedSum.toFixed(2)})`;
+        sub = salaryHere
+          ? `After ${counted.length} pending DD${counted.length!==1?'s':''} this period (€${countedSum.toFixed(2)})`
+          : `After ${counted.length} DD${counted.length!==1?'s':''} before payday (€${countedSum.toFixed(2)})`;
         if(!salaryHere && payday) sub += ` · Salary expected ${payday}${ordinal(payday)}`;
       } else {
-        sub = 'All pre-payday DDs cleared ✓';
+        sub = salaryHere ? 'All DDs this period cleared ✓' : 'All pre-payday DDs cleared ✓';
       }
       if(safeSubEl) safeSubEl.textContent=sub;
     }
@@ -4178,6 +4627,28 @@ async function renderDDPanel(txns){
   // Update AI context bar
   const ctxSafe=document.getElementById('ctx-safe');
   if(safe!==null&&ctxSafe) ctxSafe.textContent=`€${safe.toFixed(2)}`;
+
+  // Pending this period (unpaid, non-paused DDs that count against balance before payday)
+  const pendingTotal=classified.filter(d=>d.countsAgainstBalance).reduce((a,d)=>a+(d.amount||0),0);
+  const ctxPending=document.getElementById('ctx-pending');
+  if(ctxPending) ctxPending.textContent=`€${pendingTotal.toFixed(2)}`;
+
+  // Total balance across all accounts (totalBal already computed above)
+  const ctxBalance=document.getElementById('ctx-balance');
+  if(ctxBalance) ctxBalance.textContent=`€${totalBal.toFixed(2)}`;
+
+  // Spent this period — since the current salary/payday (matches the DD period
+  // and the Transactions-page period total), excluding credits and internal transfers
+  const ctxSpend=document.getElementById('ctx-spend');
+  if(ctxSpend){
+    const per=window._currentDDPeriod;
+    if(per&&per.start&&per.end){
+      const periodSpend=(txns||[]).filter(t=>!t.isCredit&&!t.isInternal&&t.date>=per.start&&t.date<per.end).reduce((a,t)=>a+(t.amount||0),0);
+      ctxSpend.textContent=`€${periodSpend.toFixed(2)}`;
+    } else {
+      ctxSpend.textContent='—';
+    }
+  }
 
   // Per-bank balance breakdown in the hero — show remaining after DDs per bank
   const breakdownEl=document.getElementById('bank-breakdown');
@@ -4224,7 +4695,8 @@ async function renderDDPanel(txns){
   if(managerPanel&&dds.length){
     managerPanel.style.display='block';
     const rows=classified.sort((a,b)=>a.dayOfMonth-b.dayOfMonth);
-    const paydayInfo = classified[0] ? `Salary expected ${classified[0].payday}${ordinal(classified[0].payday)} · ${classified[0].salaryEffectivelyHere?'arrived — post-salary DDs shown as covered':'not yet arrived — all DDs counted'}` : '';
+    const _per = window._currentDDPeriod || {};
+    const paydayInfo = classified[0] ? `Salary period: ${_per.start || '?'} → ${_per.end || '?'} · ${classified[0].salaryEffectivelyHere?'Salary arrived — all unpaid DDs this period counted against balance':'Salary not yet arrived — pre-payday DDs counted'}` : '';
     managerTable.innerHTML=`
       ${paydayInfo?`<div style="font-size:11px;color:var(--text2);margin-bottom:10px;padding:8px 10px;background:var(--surface2);border-radius:var(--rad);">${paydayInfo}</div>`:''}
       <div class="dd-hdr">
@@ -4267,11 +4739,7 @@ async function getAllBalances(){
   const out={};
   for(const b of BANKS){
     try{
-      const rec=await new Promise((res,rej)=>{
-        const tx=db.transaction('settings','readonly');
-        const r=tx.objectStore('settings').get(`bal_${b}`);
-        r.onsuccess=()=>res(r.result);r.onerror=()=>rej();
-      });
+      const rec=await dbGet('settings',`bal_${b}`);
       if(rec) out[b]=parseFloat(rec.value)||0;
     }catch(e){}
   }
@@ -4344,10 +4812,35 @@ async function deleteDD(id){
   const all = await dbGetAll('directDebits');
   const dd = all.find(d => d.id === id);
   if(!dd) return;
-  // Soft-delete so re-detection from transaction history never recreates it
-  await dbPut('directDebits', {...dd, _deleted:true, active:false, _userEdited:true});
-  await refreshAll();
+  
+  // Store deletion timestamp and ensure all resurrection-blocking flags are set
+  // Create a unique deletion marker that includes both the key and the name
+  const deletionMarker = {
+    ...dd, 
+    _deleted: true, 
+    active: false, 
+    _userEdited: true,
+    _deletedAt: new Date().toISOString(),
+    _deletionName: dd.name.toLowerCase().trim(),
+    _deletionKey: (dd.detectedKey || '').toLowerCase().trim(),
+    // Add ultra-normalized version for better matching
+    _deletionUltra: (dd.name + ' ' + (dd.detectedKey || '')).replace(/[^a-z0-9]/g, '').toLowerCase()
+  };
+  
+  console.log(`🗑️ Deleting DD: "${dd.name}" [key: "${dd.detectedKey}"] [ultra: "${deletionMarker._deletionUltra}"]`);
+  
+  await dbPut('directDebits', deletionMarker);
+  
+  // Re-render without calling refreshAll (which would re-detect)
+  // Just update the UI with current state
+  const txns = await dbGetAll('transactions');
+  await renderDDPanel(txns);
+  // renderDDPanel() recomputes window._classifiedDDs, but the Monthly Budget
+  // Check panel (if open/rendered) has its own DOM tree and won't refresh
+  // itself — do it explicitly so the deleted row disappears immediately.
+  if(document.getElementById('budget-breakdown')) await renderBudgetCheck();
 }
+
 
 async function addManualDD(){
   const name=prompt('Direct debit name (e.g. Netflix, Mortgage):');
@@ -4389,6 +4882,8 @@ async function initApp(){
   await loadCategories();
   await loadUserRules();
   await ensureDefaultRules();
+  await ensureMortgageTransferInternal();
+  await ensureVppRevoManual();
   await loadTransferMaps();
   initDebt();
   updateGhost('payoff-humm');
@@ -4401,9 +4896,15 @@ async function initApp(){
 // Set up PIN screen text + detect iOS file:// early
 (()=>{
   const stored = getStoredPin();
+  // Render the right number of dots: setup uses PIN_LEN, unlock uses the
+  // stored PIN's length (keeps existing 4-digit users working).
+  refreshUnlockDots();
+  _renderDots('change-pin-dots', PIN_LEN, 'mini-dot');
   if(!stored){
     document.getElementById('pin-title').textContent = 'Set your PIN';
-    document.getElementById('pin-sub').textContent   = 'Choose a 4-digit PIN to protect VaultLocal';
+    document.getElementById('pin-sub').textContent   = 'Choose a ' + PIN_LEN + '-digit PIN to protect VaultLocal';
+  } else if(isPinLocked()){
+    startPinLockUI();
   }
 
   // If on iOS and opened via file:// (e.g. email attachment), warn immediately.
@@ -4995,16 +5496,8 @@ async function loadSettingsValues(){
   const banks = ['ptsb','boi','revolut'];
   for(const b of banks){
     try{
-      const rec = await new Promise((res,rej)=>{
-        const tx=db.transaction('settings','readonly');
-        const r=tx.objectStore('settings').get(`bal_${b}`);
-        r.onsuccess=()=>res(r.result);r.onerror=()=>rej();
-      });
-      const upd = await new Promise((res,rej)=>{
-        const tx=db.transaction('settings','readonly');
-        const r=tx.objectStore('settings').get(`bal_${b}_updated`);
-        r.onsuccess=()=>res(r.result);r.onerror=()=>rej();
-      });
+      const rec = await dbGet('settings',`bal_${b}`);
+      const upd = await dbGet('settings',`bal_${b}_updated`);
       const input = document.getElementById(`settings-bal-${b}`);
       if(input && rec) input.value = parseFloat(rec.value).toFixed(2);
       const dateEl = document.getElementById(`settings-bal-${b}-date`);
@@ -5465,25 +5958,34 @@ function spendByCat(txns, range){
   let debugTotal = 0;
   let debugCount = 0;
   
-  // Only count actual spending (debits that aren't internal transfers)
+  // Only count actual spending (debits that aren't internal transfers).
+  // Reimbursement-flagged credits are subtracted from their category (a friend
+  // repaying a shared bill reduces what you actually spent on it).
   txns.forEach(t => {
     if(t.isInternal) return; // Skip internal transfers
-    if(t.isCredit) return;   // Skip ALL credits (income) - this is key!
+    if(t._excludeAnalysis) return; // Skip user-excluded (one-off loan overpayment etc.)
     if(!inPeriod(t.date, range)) return; // Skip out of period
-    
+
     const cat = t.category || 'Unknown';
     // Exclude non-spending categories
     if(cat === 'Income') return;
     if(cat === 'Savings') return;
     if(cat === 'Interest') return;
     if(cat === 'Refund') return;
-    
-    // Add to category total (amounts should be positive for debits)
+    if(cat === 'Internal') return;
+
     const amount = Math.abs(t.amount || 0);
+    if(t.isCredit){
+      if(t._reimbursement){ out[cat] = (out[cat] || 0) - amount; debugTotal -= amount; } // net against spend
+      return; // non-reimbursement credits (income/peer) are not spend
+    }
+    // Add to category total (amounts should be positive for debits)
     out[cat] = (out[cat] || 0) + amount;
     debugTotal += amount;
     debugCount++;
   });
+  // Clamp any category that went negative from over-reimbursement
+  Object.keys(out).forEach(c => { if(out[c] < 0) out[c] = 0; });
   
   console.log(`Spend in period: €${debugTotal.toFixed(2)} from ${debugCount} transactions`);
   console.log('Top spending categories:', Object.entries(out).filter(([k,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,5));
@@ -5491,39 +5993,31 @@ function spendByCat(txns, range){
   return out;
 }
 
+// Shared income rule — used by both the Analytics metric and the Income drill-down.
+// Income = real money IN from outside, recognised only in the main accounts
+// (PTSB + BOI). Revolut credits are treated as peer/reimbursement noise and never
+// count as income. A credit flagged as a reimbursement is excluded (and instead
+// nets against that category's spend — see spendByCat).
+function isIncomeTxn(t){
+  if(!t || t.isInternal || !t.isCredit) return false;
+  if(t._excludeAnalysis) return false; // user-excluded from all period figures
+  if(t._reimbursement) return false;
+  if((t.category||'') === 'Internal') return false;
+  const bank = (t.bank||'').toLowerCase();
+  if(bank !== 'ptsb' && bank !== 'boi') return false; // only main accounts count as income
+  const desc = (t.description || '').toLowerCase();
+  if(/\bmortgage\b|boi savings/i.test(desc)) return false; // own-account movements, not income
+  return true;
+}
+
 function incomeInPeriod(txns, range){
-  let total = 0;
-  let debugCount = 0;
-  
+  let total = 0, debugCount = 0;
   txns.forEach(t => {
-    if(t.isInternal) return; // Skip internal transfers
-    if(!inPeriod(t.date, range)) return; // Skip out of period
-    
-    const cat = t.category || 'Unknown';
-    const amount = Math.abs(t.amount || 0);
-    const desc = (t.description || '').toLowerCase();
-    
-    // Count as income if:
-    // 1. Explicitly categorized as Income, Refund, or Interest
-    // 2. OR it's a credit with a large amount (>€1000, likely salary)
-    //    — BUT exclude 'mortgage' credits (PTSB shows mortgage payment received as credit)
-    //      and 'boi savings' transfers (internal savings movements)
-    // 3. OR it's from Amazon Web Services (salary) regardless of category
-    const isExplicitIncome = (cat === 'Income' || cat === 'Refund' || cat === 'Interest');
-    const isMortgageOrSavingsTransfer = /\bmortgage\b|boi savings/i.test(desc);
-    const isLikelySalary = (t.isCredit && amount >= 1000 && !isMortgageOrSavingsTransfer);
-    const isAWSSalary = desc.includes('amazon web services');
-    
-    if(isExplicitIncome || isLikelySalary || isAWSSalary){
-      total += amount;
-      debugCount++;
-      console.log('Income transaction:', {date: t.date, amount, isCredit: t.isCredit, category: cat, description: t.description?.slice(0,40)});
-    }
+    if(!inPeriod(t.date, range)) return;
+    if(isIncomeTxn(t)){ total += Math.abs(t.amount || 0); debugCount++; }
   });
-  
   console.log(`Income in period: €${total.toFixed(2)} from ${debugCount} transactions`);
   console.log('Period range:', range.periodStart.toISOString().slice(0,10), 'to', range.periodEnd.toISOString().slice(0,10));
-  
   return total;
 }
 
@@ -5663,14 +6157,17 @@ async function renderAnalytics(){
       }
     }
     
+    window._lastUnbudgetedCats = unbudgetedDetails.map(d=>d.category);
+    const pStartStr = range.periodStart.toISOString().slice(0,10);
+    const pEndStr   = range.periodEnd.toISOString().slice(0,10);
     hero.innerHTML = [
-      ['Total spend', '€'+curTotal.toFixed(2), (pct>=0?'+':'')+pct.toFixed(1)+'% vs prev', pct>10?'var(--red)':pct<-5?'var(--teal2)':'var(--text)'],
-      ['Income',      '€'+curInc.toFixed(2),   incomeSub,     'var(--teal2)'],
-      ['Net savings', '€'+(curInc-curTotal).toFixed(2), sr.toFixed(1)+'% savings rate', (curInc-curTotal)>=0?'var(--teal2)':'var(--red)'],
-      ['Unbudgeted', '€'+unbudgetedTotal.toFixed(2), 'Extra spending', unbudgetedTotal>100?'var(--red)':'var(--text3)'],
-    ].map(([label,val,sub,color])=>
-      '<div style="background:var(--surface2);border-radius:var(--rad-lg);padding:1rem;">'
-      +'<div style="font-size:11px;color:var(--text3);margin-bottom:4px;">'+label+'</div>'
+      ['Total spend', '€'+curTotal.toFixed(2), (pct>=0?'+':'')+pct.toFixed(1)+'% vs prev', pct>10?'var(--red)':pct<-5?'var(--teal2)':'var(--text)', `viewPeriodTransactions('spend','${pStartStr}','${pEndStr}',null,'Spending this period')`],
+      ['Income',      '€'+curInc.toFixed(2),   incomeSub,     'var(--teal2)', `viewPeriodTransactions('income','${pStartStr}','${pEndStr}',null,'Income this period')`],
+      ['Net savings', '€'+(curInc-curTotal).toFixed(2), sr.toFixed(1)+'% savings rate', (curInc-curTotal)>=0?'var(--teal2)':'var(--red)', `viewPeriodTransactions('all','${pStartStr}','${pEndStr}',null,'All income & spending this period')`],
+      ['Unbudgeted', '€'+unbudgetedTotal.toFixed(2), 'Extra spending', unbudgetedTotal>100?'var(--red)':'var(--text3)', `viewPeriodTransactions('spend','${pStartStr}','${pEndStr}',window._lastUnbudgetedCats,'Unbudgeted spending this period')`],
+    ].map(([label,val,sub,color,action])=>
+      '<div onclick="'+action+'" title="Tap to view these transactions" style="background:var(--surface2);border-radius:var(--rad-lg);padding:1rem;cursor:pointer;">'
+      +'<div style="font-size:11px;color:var(--text3);margin-bottom:4px;">'+label+' ›</div>'
       +'<div style="font-size:20px;font-weight:600;color:'+color+';">'+val+'</div>'
       +'<div style="font-size:11px;color:var(--text3);margin-top:3px;">'+sub+'</div>'
       +'</div>'
@@ -7010,7 +7507,7 @@ async function renderBudgetCheck(){
 
 
 // ═══════════════════════════════════════════════════
-// CLOUD SYNC — Supabase
+// CLOUD SYNC — GitHub Gist (encrypted)
 // ═══════════════════════════════════════════════════
 
 // ── GitHub Gist sync ─────────────────────────────────────────────────────
@@ -7022,6 +7519,43 @@ function getGistConfig(){
     token:  localStorage.getItem('gist_token')||'',
     gistId: localStorage.getItem('gist_id')||''
   };
+}
+
+// ── At-rest encryption for gist payloads ───────────────────────────────────
+// Key is derived from the gist token (present on every device that can sync),
+// so encryption is transparent and needs no extra passphrase. Anyone who
+// obtains the gist URL but not the token sees only ciphertext.
+const _SYNC_ENC_PREFIX='vlenc1:';
+let _syncKeyCache=null,_syncKeyToken=null;
+async function _syncKey(){
+  const {token}=getGistConfig();
+  if(!token) throw new Error('No GitHub token');
+  if(_syncKeyCache&&_syncKeyToken===token) return _syncKeyCache;
+  const enc=new TextEncoder();
+  const km=await crypto.subtle.importKey('raw',enc.encode(token),{name:'PBKDF2'},false,['deriveKey']);
+  _syncKeyCache=await crypto.subtle.deriveKey(
+    {name:'PBKDF2',salt:enc.encode('vaultlocal-sync-v1'),iterations:200000,hash:'SHA-256'},
+    km,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+  _syncKeyToken=token;
+  return _syncKeyCache;
+}
+async function _syncEncrypt(obj){
+  const plain=JSON.stringify(obj);
+  if(!(window.crypto&&crypto.subtle)) return plain; // graceful fallback
+  const key=await _syncKey();
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(plain)));
+  return _SYNC_ENC_PREFIX+_b64enc(iv)+':'+_b64enc(ct);
+}
+async function _syncDecrypt(str){
+  if(typeof str!=='string'||str.indexOf(_SYNC_ENC_PREFIX)!==0) return JSON.parse(str); // legacy plaintext gist
+  const body=str.slice(_SYNC_ENC_PREFIX.length);
+  const sep=body.indexOf(':');
+  const iv=_b64dec(body.slice(0,sep));
+  const ct=_b64dec(body.slice(sep+1));
+  const key=await _syncKey();
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv},key,ct);
+  return JSON.parse(new TextDecoder().decode(pt));
 }
 
 // Stable content-based key for deduplication across devices
@@ -7081,8 +7615,8 @@ async function gistSync(direction){
       const txnArr = [...txnMap.values()];
 
       const files = {
-        'vault_meta.json':         { content: JSON.stringify(meta,   null, 0) },
-        'vault_transactions.json': { content: JSON.stringify(txnArr, null, 0) }
+        'vault_meta.json':         { content: await _syncEncrypt(meta) },
+        'vault_transactions.json': { content: await _syncEncrypt(txnArr) }
       };
 
       let id = gistId;
@@ -7131,7 +7665,7 @@ async function gistSync(direction){
       const metaFile = gist.files['vault_meta.json'];
       if(!metaFile) throw new Error('vault_meta.json not found — push from your other device first');
 
-      const meta = JSON.parse(await _gistFileContent(metaFile));
+      const meta = await _syncDecrypt(await _gistFileContent(metaFile));
       const pushedAt = (meta.exportedAt||'').slice(0,19).replace('T',' ') || '?';
       const from     = meta.syncedFrom || 'another device';
 
@@ -7146,7 +7680,7 @@ async function gistSync(direction){
       // Merge transactions — add only what isn't already local
       const txnsFile = gist.files['vault_transactions.json'];
       if(txnsFile){
-        const remoteTxns = JSON.parse(await _gistFileContent(txnsFile));
+        const remoteTxns = await _syncDecrypt(await _gistFileContent(txnsFile));
         if(remoteTxns.length > 0){
           const localTxns = await dbGetAll('transactions');
           const localKeys = new Set(localTxns.map(t => txnKey(t)));
@@ -7192,12 +7726,13 @@ function setGistId(){
 function buildSyncPayload(){
   // Re-use the same payload structure as exportBackup
   return new Promise(async (resolve) => {
-    const [dds, debts, rules, transferMaps, cats] = await Promise.all([
+    const [dds, debts, rules, transferMaps, cats, savings] = await Promise.all([
       dbGetAll('directDebits'),
       dbGetAll('debts'),
       dbGetAll('rules'),
       dbGetAll('transferMaps'),
-      dbGetAll('categories')
+      dbGetAll('categories'),
+      dbGetAll('savings')
     ]);
     const settings = {};
     for(let i=0;i<localStorage.length;i++){
@@ -7230,6 +7765,9 @@ function buildSyncPayload(){
         name:d.name,type:d.type,balance:d.balance,originalBalance:d.originalBalance,
         rate:d.rate,monthlyPayment:d.monthlyPayment,limit:d.limit,
         dueDayOfMonth:d.dueDayOfMonth,currency:d.currency||'EUR',lastUpdated:d.lastUpdated
+      })),
+      savings: savings.map(s=>({
+        name:s.name, balance:s.balance, target:s.target||0, lastUpdated:s.lastUpdated
       })),
       settings,
       balances

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vault-v2';
+const CACHE_NAME = 'vault-v4';
 
 // Assets to pre-cache on install
 const PRECACHE_URLS = [
