@@ -1,0 +1,16 @@
+# Editor/IDE
+.vscode/
+
+# AWS infra snapshots / one-off config dumps (not part of the app,
+# regenerate via AWS CLI / console as needed — see ARCHITECTURE.md)
+bucket-policy.json
+cf-config.json
+old-dist.json
+old-dist-config.json
+
+# Scratch / scan output
+g-drive-scan-results.txt
+
+# Local backups created by fix-encoding.ps1 / patch-ai.ps1
+*.bak-*
+*.mojibake-backup*
