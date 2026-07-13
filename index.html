@@ -369,7 +369,7 @@ input[type=range]{flex:1;height:4px;cursor:pointer;}
       <div class="topbar-logo-mark">
         <svg viewBox="0 0 14 14" fill="none"><rect x="2" y="6" width="10" height="7" rx="1.5" stroke="#5DCAA5" stroke-width="1.2"/><path d="M4.5 6V4.5a2.5 2.5 0 015 0V6" stroke="#5DCAA5" stroke-width="1.2" stroke-linecap="round"/><circle cx="7" cy="9.5" r="1.2" fill="#5DCAA5"/></svg>
       </div>
-      VaultLocal <span style="font-size:9px;color:var(--text3);font-weight:400;margin-left:4px;">v3.2 · 2026-07-10 (savings-backup-restore)</span>
+      VaultLocal <span style="font-size:9px;color:var(--text3);font-weight:400;margin-left:4px;">v3.3 · 2026-07-13 (ai-non-discretionary-guard)</span>
     </div>
     <div class="topbar-nav desktop-only">
       <button class="nav-btn active" onclick="showPage('dashboard',this)">Dashboard</button>
@@ -3344,6 +3344,8 @@ CREDIT CARDS:
 
 For affordability questions: use safe-to-spend as the ceiling, check if any DDs fall between today and the purchase date, and flag if salary hasn't arrived yet. Keep answers under 80 words unless asked for detail.
 
+Never perform ad-hoc arithmetic in prose — quote the figures given above exactly as stated; if a number isn't provided here, say you don't have it rather than estimating or re-deriving it. When suggesting ways to cut spending, only propose discretionary categories (Eating out, Entertainment, Subscriptions, Shopping, or trimming Groceries) — never suggest cutting non-discretionary commitments like Housing, Utilities, loan repayments (Fixed), Savings, Interest, Refund or Income; flag these explicitly as non-discretionary/essential if the user asks about reducing them.
+
 PLANNED UPCOMING EXPENSES:
 ${(window._plannedExpenses&&window._plannedExpenses.length
   ? window._plannedExpenses.map(e=>`  - ${e.name}: €${e.amount.toFixed(2)}${e.date?' on '+e.date:''}`).join('\n')
@@ -4306,50 +4308,16 @@ async function classifyDDs(dds, txns){
 
   const payday = await expectedPayday(year, month);
 
-  // Get current salary period instead of calendar month
+  // Single source of truth for "this period" — same logic used by Analytics (getPeriodRange),
+  // so the DD schedule and Analytics never disagree about where the period boundaries fall.
+  const range = await getPeriodRange(0);
+  const periodStart = range.periodStart.toISOString().slice(0,10);
+  const periodEnd = range.periodEnd.toISOString().slice(0,10);
   const salaryDates = await getSalaryDates();
-  let periodStart, periodEnd;
-  
-  if(salaryDates.length >= 2){
-    const todayStr = now.toISOString().slice(0,10);
-    
-    // Find current period
-    // Rule: Each salary date STARTS a new period that runs until (but not including) the next salary date
-    // Period: [salary_date_1, salary_date_2)
-    let foundPeriod = false;
-    
-    for(let i = 0; i < salaryDates.length - 1; i++){
-      const thisPeriodStart = salaryDates[i];
-      const nextPeriodStart = salaryDates[i + 1];
-      
-      // If today is >= this period start AND < next period start, we're in this period
-      if(todayStr >= thisPeriodStart && todayStr < nextPeriodStart){
-        periodStart = thisPeriodStart;
-        periodEnd = nextPeriodStart;
-        foundPeriod = true;
-        break;
-      }
-    }
-    
-    // If we didn't find a period, we might be in or after the last defined period
-    if(!foundPeriod && todayStr >= salaryDates[salaryDates.length - 1]){
-      periodStart = salaryDates[salaryDates.length - 1];
-      // Try to estimate next period (30 days later as fallback)
-      const lastDate = new Date(salaryDates[salaryDates.length - 1]);
-      lastDate.setDate(lastDate.getDate() + 30);
-      periodEnd = lastDate.toISOString().slice(0,10);
-    }
-  }
-  
-  // Fallback to calendar month if no salary dates
-  if(!periodStart || !periodEnd){
-    const ym = `${year}-${String(month+1).padStart(2,'0')}`;
-    periodStart = ym + '-01';
-    periodEnd = ym + '-31';
-  }
 
   // Now that period is known, check if salary arrived within it
   window._currentDDPeriod = {start: periodStart, end: periodEnd};
+
   const salaryArrived = await salaryLandedThisMonth(txns);
   const salaryEffectivelyHere = salaryArrived || today >= payday;
 
@@ -7324,7 +7292,6 @@ function getBudgetCats(){
     {id:'shopping',  name:'Shopping',     amount:0, txnCat:'Shopping'},
     {id:'entertain', name:'Entertainment',amount:0, txnCat:'Entertainment'},
     {id:'health',    name:'Health',       amount:0, txnCat:'Health'},
-    {id:'utilities', name:'Utilities',    amount:0, txnCat:'Utilities'},
   ];
 }
 
