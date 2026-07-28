@@ -369,7 +369,7 @@ input[type=range]{flex:1;height:4px;cursor:pointer;}
       <div class="topbar-logo-mark">
         <svg viewBox="0 0 14 14" fill="none"><rect x="2" y="6" width="10" height="7" rx="1.5" stroke="#5DCAA5" stroke-width="1.2"/><path d="M4.5 6V4.5a2.5 2.5 0 015 0V6" stroke="#5DCAA5" stroke-width="1.2" stroke-linecap="round"/><circle cx="7" cy="9.5" r="1.2" fill="#5DCAA5"/></svg>
       </div>
-      VaultLocal <span style="font-size:9px;color:var(--text3);font-weight:400;margin-left:4px;">v3.4 · 2026-07-13 (ai-no-fake-line-items)</span>
+      VaultLocal <span style="font-size:9px;color:var(--text3);font-weight:400;margin-left:4px;">v3.9 · 2026-07-28 (backup-parity-float)</span>
     </div>
     <div class="topbar-nav desktop-only">
       <button class="nav-btn active" onclick="showPage('dashboard',this)">Dashboard</button>
@@ -443,6 +443,7 @@ input[type=range]{flex:1;height:4px;cursor:pointer;}
             </div>
             <div class="safe-val" id="dash-safe">—</div>
             <div class="safe-sub" id="dash-safe-sub">Upload statements to calculate</div>
+            <div class="safe-sub" id="dash-safe-float" style="display:none;"></div>
             <div id="bank-breakdown" style="margin-top:10px;display:none;">
               <div style="font-size:10px;color:var(--teal4);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;">Balance by account</div>
               <div id="bank-breakdown-rows"></div>
@@ -582,10 +583,12 @@ input[type=range]{flex:1;height:4px;cursor:pointer;}
           <div id="dd-manager-table"></div>
           <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
             <button class="ctrl-btn" onclick="addManualDD()">+ Add DD manually</button>
+            <button class="ctrl-btn" onclick="startNewPeriod()" title="Reset every direct debit to unpaid / auto-detect for the current salary period" style="background:var(--teal5);color:var(--teal2);border-color:var(--teal6);">🔄 Start new period</button>
             <button class="ctrl-btn" onclick="exportDDs()" style="background:var(--surface2);color:var(--text2);border-color:var(--border2);">↓ Export schedule</button>
             <label class="ctrl-btn" style="background:var(--surface2);color:var(--text2);border-color:var(--border2);cursor:pointer;">
               ↑ Import schedule<input type="file" accept=".json" style="display:none;" onchange="importDDs(this)"/>
             </label>
+            <span id="dd-period-status" style="font-size:11px;color:var(--teal2);"></span>
             <span style="font-size:11px;color:var(--text3);">Changes save automatically</span>
           </div>
         </div>
@@ -962,6 +965,21 @@ input[type=range]{flex:1;height:4px;cursor:pointer;}
             </div>
           </div>
           <div id="payday-override-note" style="font-size:11px;color:var(--teal2);padding:4px 0;display:none;"></div>
+          <div class="setting-row">
+            <div><div class="setting-label">Grocery float per period (€)</div><div class="setting-sub">Fixed amount you transfer out for groceries. Safe-to-spend will show what's left once the unsent portion is reserved. 0 = off.</div></div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="number" id="grocery-float-input" min="0" placeholder="0" style="width:90px;padding:5px 8px;border:1px solid var(--border);border-radius:var(--rad);font-size:13px;"/>
+              <button onclick="saveGroceryFloat()" class="ctrl-btn" style="font-size:11px;padding:5px 10px;">Save</button>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Float transfer matches</div><div class="setting-sub">Text identifying those transfers on your statement</div></div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="text" id="grocery-float-key-input" placeholder="vpp revo" style="width:110px;padding:5px 8px;border:1px solid var(--border);border-radius:var(--rad);font-size:13px;"/>
+              <button onclick="saveGroceryFloatKey()" class="ctrl-btn" style="font-size:11px;padding:5px 10px;">Save</button>
+            </div>
+          </div>
+          <div id="grocery-float-note" style="font-size:11px;color:var(--teal2);padding:4px 0;"></div>
         </div>
         <div class="settings-section">
           <div class="settings-title">Salary payment dates</div>
@@ -2377,6 +2395,9 @@ function viewCategoryFromDashboard(cat){
   window._txnPeriodFrom = null;
   window._txnPeriodTo = null;
   window._txnPeriodCat = null;
+  window._txnTypeFilter = null;
+  window._txnCatSet = null;
+  window._txnFilterLabel = null;
   renderTransactions();
 }
 
@@ -2396,17 +2417,8 @@ async function viewCategoryTransactions(cat, dateFrom, dateTo){
   window._txnPeriodCat = cat;
   window._txnTypeFilter = null;
   window._txnCatSet = null;
-  await renderTransactions();
-  // Banner after render completes
-  const wrap = document.getElementById('txn-table-wrap');
-  const oldBanner = document.getElementById('txn-period-banner');
-  if(oldBanner) oldBanner.remove();
-  const banner = document.createElement('div');
-  banner.id = 'txn-period-banner';
-  banner.style.cssText = 'background:var(--teal5);border:1px solid var(--teal6);border-radius:var(--rad);padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--teal2);display:flex;justify-content:space-between;align-items:center;';
-  banner.innerHTML = '<span>Showing <strong>'+cat+'</strong> · '+dateFrom+' → '+dateTo+'</span>'
-    +'<button onclick="clearPeriodFilter()" style="font-size:11px;padding:3px 8px;border:1px solid var(--teal6);border-radius:4px;background:transparent;color:var(--teal2);cursor:pointer;">✕ Clear filter</button>';
-  wrap.prepend(banner);
+  window._txnFilterLabel = cat;
+  await renderTransactions(); // renders its own banner via txnFilterBannerHTML()
 }
 
 function clearPeriodFilter(){
@@ -2415,11 +2427,35 @@ function clearPeriodFilter(){
   window._txnPeriodCat = null;
   window._txnTypeFilter = null;
   window._txnCatSet = null;
+  window._txnFilterLabel = null;
   const catSel = document.getElementById('txn-filter-cat');
   if(catSel) catSel.value = '';
-  const banner = document.getElementById('txn-period-banner');
-  if(banner) banner.remove();
   renderTransactions();
+}
+
+// Builds the drill-down filter banner as part of the transactions render.
+// It used to be a detached element prepended into #txn-table-wrap, but
+// renderTransactions overwrites that wrap's innerHTML — so the banner (and its
+// "Clear filter" button) was destroyed by any later re-render while the filters
+// themselves lived on `window` and stayed active. The result was a silently
+// filtered Transactions page with no way to tell, and nothing to click to undo it.
+function txnFilterBannerHTML(){
+  const from  = window._txnPeriodFrom;
+  const to    = window._txnPeriodTo;
+  const label = window._txnFilterLabel;
+  const hasCatSet = Array.isArray(window._txnCatSet) && window._txnCatSet.length > 0;
+  if(!from && !to && !window._txnTypeFilter && !hasCatSet) return '';
+
+  // `to` is an exclusive bound; show the inclusive last day.
+  const rangeTxt = (from && to) ? `${from} → ${dayBeforeStr(to)}`
+                 : from        ? `from ${from}`
+                 : to          ? `up to ${dayBeforeStr(to)}`
+                 : '';
+  const esc = s => String(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return '<div id="txn-period-banner" style="background:var(--teal5);border:1px solid var(--teal6);border-radius:var(--rad);padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--teal2);display:flex;justify-content:space-between;align-items:center;gap:8px;">'
+    + '<span>Showing <strong>'+esc(label||'a filtered view')+'</strong>'+(rangeTxt?' · '+esc(rangeTxt):'')+'</span>'
+    + '<button onclick="clearPeriodFilter()" style="font-size:11px;padding:3px 8px;border:1px solid var(--teal6);border-radius:4px;background:transparent;color:var(--teal2);cursor:pointer;flex-shrink:0;">✕ Clear filter</button>'
+    + '</div>';
 }
 
 // Drill into a period's transactions from the Analytics hero tiles.
@@ -2434,16 +2470,8 @@ async function viewPeriodTransactions(type, dateFrom, dateTo, catSet, labelText)
   window._txnPeriodCat = null;
   window._txnTypeFilter = type;
   window._txnCatSet = (Array.isArray(catSet)&&catSet.length)?catSet:null;
-  await renderTransactions();
-  const wrap = document.getElementById('txn-table-wrap');
-  const oldBanner = document.getElementById('txn-period-banner');
-  if(oldBanner) oldBanner.remove();
-  const banner = document.createElement('div');
-  banner.id = 'txn-period-banner';
-  banner.style.cssText = 'background:var(--teal5);border:1px solid var(--teal6);border-radius:var(--rad);padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--teal2);display:flex;justify-content:space-between;align-items:center;gap:8px;';
-  banner.innerHTML = '<span>Showing <strong>'+labelText+'</strong> · '+dateFrom+' → '+dateTo+'</span>'
-    +'<button onclick="clearPeriodFilter()" style="font-size:11px;padding:3px 8px;border:1px solid var(--teal6);border-radius:4px;background:transparent;color:var(--teal2);cursor:pointer;flex-shrink:0;">✕ Clear filter</button>';
-  if(wrap) wrap.prepend(banner);
+  window._txnFilterLabel = labelText;
+  await renderTransactions(); // renders its own banner via txnFilterBannerHTML()
 }
 
 function clearAllFilters(){
@@ -2452,13 +2480,16 @@ function clearAllFilters(){
   window._txnPeriodCat = null;
   window._txnTypeFilter = null;
   window._txnCatSet = null;
+  window._txnFilterLabel = null;
   const ids = ['txn-filter-bank','txn-filter-cat','txn-search','txn-amt-min','txn-amt-max','txn-period-mode'];
   ids.forEach(id => {
     const el = document.getElementById(id);
     if(el) el.tagName === 'SELECT' ? el.value = '' : el.value = '';
   });
-  const banner = document.getElementById('txn-period-banner');
-  if(banner) banner.remove();
+  // Also release the salary-period checkbox — it is a second, independent period
+  // filter, and leaving it ticked meant "Clear all" did not actually clear everything.
+  const periodCb = document.getElementById('txn-period-enabled');
+  if(periodCb) periodCb.checked = false;
   renderTransactions();
 }
 
@@ -2606,8 +2637,10 @@ async function renderTransactions(){
   const cntEl=document.getElementById('txn-count'); if(cntEl) cntEl.textContent=`${rows.length} transactions`;
   const wrap=document.getElementById('txn-table-wrap');
   if(!wrap) return; // page not in DOM yet
-  if(!rows.length){wrap.innerHTML='<div class="empty-state">No transactions match filters.</div>';return;}
-  wrap.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rad-lg);padding:.75rem 1rem;">`+
+  // Banner is rendered as part of the output so it survives every re-render.
+  const _banner=txnFilterBannerHTML();
+  if(!rows.length){wrap.innerHTML=_banner+'<div class="empty-state">No transactions match filters.</div>';return;}
+  wrap.innerHTML=_banner+`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rad-lg);padding:.75rem 1rem;">`+
     rows.map(r=>{
       const icon=CAT_ICON[r.category]||'•';
       const bg=CAT_COLOR[r.category]||'#f0efeb';
@@ -4071,23 +4104,41 @@ async function detectAndSyncDDs(txns){
           return true;
         }
         
-        // Strategy 4: Token-based matching - extract key words (3+ chars) and check overlap
+        // Strategy 4: Token-based matching - extract key words (3+ chars) and check overlap.
+        //
+        // This used to produce false positives that permanently suppressed unrelated DDs.
+        // Worked example of the old bug: stored "POS APPLE.COM/BI 07/06 0" + key
+        // "pos apple.com/bi" tokenised to [pos, applecombi, 0706, pos, applecombi] — "pos"
+        // twice, because name and key are concatenated. Against new desc "pos help.hbomax."
+        // the only shared token was the generic bank prefix "pos", but it counted twice and
+        // the threshold used Math.min() of the two token counts, which a short description
+        // drives low enough to clear. Result: HBO Max could never be created because an
+        // Apple DD had once been deleted.
+        //
+        // Three fixes: de-duplicate tokens, drop generic bank/transaction prefixes that
+        // carry no vendor identity, and require at least one DISTINCTIVE token to match
+        // rather than allowing a count of generic ones to satisfy the threshold.
+        const GENERIC_TOKENS = new Set([
+          'pos','tkn','dd','sepa','ict','tpp','cnc','atm','vpp','ipa','www','com',
+          'ltd','the','and','for','ire','ireland','eur','revolut','card','payment'
+        ]);
         const extractTokens = s => {
-          return s.replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(t => t.length >= 3);
+          const raw = s.replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(t => t.length >= 3);
+          return [...new Set(raw)]; // de-dupe: name+key concatenation double-counted tokens
         };
         const storedTokens = extractTokens(storedName + ' ' + storedKey);
         const newTokens = extractTokens(newDesc + ' ' + newFullDesc);
-        
+
         if(storedTokens.length > 0 && newTokens.length > 0){
-          const commonTokens = storedTokens.filter(t => newTokens.some(nt => 
-            nt.includes(t) || t.includes(nt) || (t.length >= 4 && nt.length >= 4 && (
-              t.slice(0,4) === nt.slice(0,4) // first 4 chars match (lowered from 5)
-            ))
-          ));
-          // Reduced threshold to 40% for better fuzzy matching (from 45%)
+          const tokensMatch = (t, nt) =>
+            nt.includes(t) || t.includes(nt) ||
+            (t.length >= 4 && nt.length >= 4 && t.slice(0,4) === nt.slice(0,4));
+          const commonTokens = storedTokens.filter(t => newTokens.some(nt => tokensMatch(t, nt)));
+          // A shared vendor token that isn't a generic banking prefix or a bare number.
+          const distinctive = commonTokens.filter(t => !GENERIC_TOKENS.has(t) && !/^\d+$/.test(t));
           const threshold = Math.min(storedTokens.length, newTokens.length) * 0.40;
-          if(commonTokens.length >= threshold){
-            console.log(`🎯 Match found (tokens): ${commonTokens.length}/${Math.min(storedTokens.length, newTokens.length)} tokens matched`);
+          if(distinctive.length >= 1 && commonTokens.length >= threshold){
+            console.log(`🎯 Match found (tokens): ${commonTokens.length}/${Math.min(storedTokens.length, newTokens.length)} matched, distinctive: [${distinctive.join(', ')}]`);
             return true;
           }
         }
@@ -4186,11 +4237,30 @@ function setMonthlyIncome(val){
   localStorage.setItem('monthly_income', String(parseFloat(val)||0));
 }
 
+// Set while a cloud pull is in flight. A pull restores monthly_income from the
+// pushing device, and the refreshAll() that follows would otherwise re-derive and
+// overwrite it from local transactions before the user ever sees the synced value.
+let _skipIncomeAutoDetect = false;
+
+// Shared gate for "could this credit be income/salary?".
+// Mirrors isIncome(): an internal transfer, a ⊘ excluded one-off (loan overpayment,
+// windfall) or a ↩ reimbursement is not income, so none of them may be read as
+// salary either. Salary detection previously only checked isInternal, so an excluded
+// €1,000+ windfall was mistaken for payroll — which flipped "salary received",
+// shifted DD paid/pending classification and could overwrite monthly_income.
+function _isIncomeCandidate(t){
+  return !!t && !t.isInternal && !t._excludeAnalysis && !t._reimbursement;
+}
+
 // Auto-detect payroll income from the most recent salary period.
 // Looks for Income-categorised credits ≥ €1,000 (or matching salary/payroll keywords).
 // Sums all qualifying credits in the most recent salary period to capture split payrolls.
 // Updates localStorage + UI if the detected value differs materially from what is stored.
 async function autoDetectPayrollIncome(txns){
+  if(_skipIncomeAutoDetect){
+    _renderIncomeDetectedLabel();
+    return getMonthlyIncome();
+  }
   try{
     // Determine the most recent completed salary period start date
     const salaryDates = await getSalaryDates();
@@ -4212,7 +4282,7 @@ async function autoDetectPayrollIncome(txns){
 
     // Collect all income credits in/after the period start
     const isPayroll = t => {
-      if(!t.isCredit || t.isInternal) return false;
+      if(!t.isCredit || !_isIncomeCandidate(t)) return false;
       if((t.amount || 0) < 1000) return false;
       const cat = t.category || '';
       const desc = (t.description || '').toLowerCase();
@@ -4290,7 +4360,7 @@ async function salaryLandedThisMonth(txns){
   const pe = period.end || '';
   if(!ps) return false; // period not yet determined
   return txns.some(t => {
-    if(!t.date || !t.isCredit || t.isInternal) return false;
+    if(!t.date || !t.isCredit || !_isIncomeCandidate(t)) return false;
     if(t.date < ps || (pe && t.date >= pe)) return false; // outside period
     const desc = (t.description||'').toLowerCase();
     return (t.amount >= 1000) ||
@@ -4462,6 +4532,63 @@ async function classifyDDs(dds, txns){
   });
 }
 
+// ── Grocery float reservation ─────────────────────────────────────────────────
+// calcSafeToSpend deducts direct debits only and reserves nothing for variable
+// spending, so at the start of a period it overstates what is genuinely spendable
+// and only converges on reality by the final days.
+//
+// If you move a fixed float out each period for groceries, the portion not yet
+// transferred is a known future commitment. This reserves it. Deliberately ADDITIVE:
+// the headline safe-to-spend value is left exactly as it was, and this renders as an
+// extra line. Set the float to 0 (the default) and nothing changes anywhere.
+function getGroceryFloatBudget(){
+  const v = parseFloat(localStorage.getItem('grocery_float') || '0');
+  return (isNaN(v) || v < 0) ? 0 : v;
+}
+
+function getGroceryFloatKey(){
+  return (localStorage.getItem('grocery_float_key') || 'vpp revo').trim().toLowerCase();
+}
+
+// How much of the float has already left the account this period.
+function groceryFloatSent(txns, periodStart, periodEnd){
+  const key = getGroceryFloatKey();
+  if(!key) return 0;
+  return (txns||[])
+    .filter(t => t && !t.isCredit && t.date
+      && (!periodStart || t.date >= periodStart)
+      && (!periodEnd   || t.date <  periodEnd)
+      && (t.description||'').toLowerCase().includes(key))
+    .reduce((a,t) => a + (t.amount||0), 0);
+}
+
+// Returns null when the feature is off, so callers can skip rendering entirely.
+function calcFloatReservation(safe, txns, periodStart, periodEnd){
+  const budget = getGroceryFloatBudget();
+  if(budget <= 0 || safe === null) return null;
+  const sent      = groceryFloatSent(txns, periodStart, periodEnd);
+  const remaining = Math.max(0, budget - sent);
+  return { budget, sent, remaining, afterFloat: safe - remaining };
+}
+
+function saveGroceryFloat(){
+  const el = document.getElementById('grocery-float-input');
+  const v = parseFloat(el?.value);
+  localStorage.setItem('grocery_float', String(isNaN(v) || v < 0 ? 0 : v));
+  const note = document.getElementById('grocery-float-note');
+  if(note) note.textContent = 'Saved ✓';
+  refreshAll();
+}
+
+function saveGroceryFloatKey(){
+  const el = document.getElementById('grocery-float-key-input');
+  const v = (el?.value || '').trim();
+  if(v) localStorage.setItem('grocery_float_key', v);
+  const note = document.getElementById('grocery-float-note');
+  if(note) note.textContent = v ? `Matching transfers containing "${v}" ✓` : 'Enter matching text first';
+  refreshAll();
+}
+
 // Calculate safe-to-spend with salary-aware DD logic
 function calcSafeToSpend(balances, classifiedDDs, txns){
   const totalBal = Object.values(balances).reduce((a,b) => a + (parseFloat(b)||0), 0);
@@ -4477,7 +4604,21 @@ function calcSafeToSpend(balances, classifiedDDs, txns){
 }
 
 async function renderDDPanel(txns){
-  const dds=await detectAndSyncDDs(txns);
+  let dds=await detectAndSyncDDs(txns);
+
+  // Roll the salary period BEFORE classifying. Stale manual paid/paused flags from
+  // the previous period would otherwise mask DDs that are due again this period.
+  const ddRange = await getPeriodRange(0);
+  const ddPeriodStart = ddRange.periodStart.toISOString().slice(0,10);
+  const ddPeriodEnd   = ddRange.periodEnd.toISOString().slice(0,10);
+  if(await autoRollDDPeriod(ddPeriodStart)){
+    // Flags just changed on disk — re-read so classification sees the cleared state.
+    dds = (await dbGetAll('directDebits')).filter(d=>!d._deleted);
+  }
+
+  const ddStatusEl = document.getElementById('dd-period-status');
+  if(ddStatusEl) ddStatusEl.textContent = `Active period: ${ddPeriodStart} → ${dayBeforeStr(ddPeriodEnd)}`;
+
   const classified=await classifyDDs(dds, txns);
 
   // Update bills list in hero
@@ -4589,6 +4730,21 @@ async function renderDDPanel(txns){
         sub = salaryHere ? 'All DDs this period cleared ✓' : 'All pre-payday DDs cleared ✓';
       }
       if(safeSubEl) safeSubEl.textContent=sub;
+    }
+  }
+
+  // Additive grocery-float line. Does not touch `safe` or #dash-safe above.
+  const floatEl = document.getElementById('dash-safe-float');
+  if(floatEl){
+    const fr = calcFloatReservation(safe, txns, ddPeriodStart, ddPeriodEnd);
+    if(!fr){
+      floatEl.style.display = 'none';
+      floatEl.textContent = '';
+    } else {
+      floatEl.style.display = '';
+      floatEl.textContent = fr.remaining > 0
+        ? `€${fr.afterFloat.toFixed(2)} after reserving €${fr.remaining.toFixed(2)} grocery float (€${fr.sent.toFixed(2)} of €${fr.budget.toFixed(2)} sent)`
+        : `Grocery float fully sent (€${fr.sent.toFixed(2)} of €${fr.budget.toFixed(2)}) — nothing reserved`;
     }
   }
 
@@ -4753,26 +4909,86 @@ async function toggleDDPaid(id, currentlyPaid){
   await refreshAll();
 }
 
+// Clear all manual paid/paused overrides so every DD falls back to auto-detection.
+// Deliberately does NOT call refreshAll(): this runs during renderDDPanel, and
+// refreshing from here would re-enter the render and loop. Callers refresh instead.
 async function resetDDManualFlags(){
-  // Reset all manual paid/paused flags for the new period
   const all = await dbGetAll('directDebits');
   let updated = 0;
-  
+
   for(const dd of all){
-    if(dd._manualPaid !== null || dd._paused === true){
+    // == null covers both null and undefined; the old !== null test also matched
+    // undefined and rewrote untouched records on every pass.
+    const hasManualPaid = dd._manualPaid != null;
+    if(hasManualPaid || dd._paused === true){
       dd._manualPaid = null;
       dd._paused = false;
       await dbPut('directDebits', dd);
       updated++;
     }
   }
-  
-  if(updated > 0){
-    console.log(`Reset ${updated} DD manual flags for new period`);
-    await refreshAll();
-  }
-  
+
+  if(updated > 0) console.log(`Reset ${updated} DD manual flag(s) for new period`);
   return updated;
+}
+
+// ── Salary-period rollover ────────────────────────────────────────────────────
+// Manual paid/paused flags are per-period. Once a new salary period starts they are
+// stale: last period's "✓ Paid" hides a DD that is now due again, which is why the
+// schedule looked wrong at every payday. resetDDManualFlags() already existed but was
+// never called from anywhere, so the flags persisted indefinitely.
+//
+// The marker lives in the settings store, so it travels between devices with the
+// existing `balances` half of the sync payload and both devices agree on the period.
+async function getDDPeriodMarker(){
+  try{
+    const rec = await dbGet('settings','dd_period_start');
+    return rec ? rec.value : '';
+  }catch(e){ return ''; }
+}
+
+async function setDDPeriodMarker(periodStart){
+  await dbPut('settings',{key:'dd_period_start', value:periodStart});
+}
+
+// Called on every DD render. Clears manual flags exactly once, when the active
+// salary period start changes. Returns true if a rollover happened.
+async function autoRollDDPeriod(periodStart){
+  if(!periodStart) return false;
+  const marker = await getDDPeriodMarker();
+  if(marker === periodStart) return false;
+  const cleared = await resetDDManualFlags();
+  await setDDPeriodMarker(periodStart);
+  console.log(`🔄 New salary period ${periodStart} (previous: ${marker||'none'}) — cleared manual flags on ${cleared} DD(s)`);
+  return true;
+}
+
+// Explicit "confirm new period has begun" action from the DD manager. Does the same
+// clear as the automatic rollover, but on demand — useful when a statement lands late
+// or you want to re-arm the schedule mid-period.
+async function startNewPeriod(){
+  const range = await getPeriodRange(0);
+  const periodStart = range.periodStart.toISOString().slice(0,10);
+  const periodEnd   = range.periodEnd.toISOString().slice(0,10);
+
+  const all = (await dbGetAll('directDebits')).filter(d=>!d._deleted);
+  const overridden = all.filter(d => d._manualPaid != null || d._paused === true).length;
+
+  const msg = `Start new period ${periodStart} → ${dayBeforeStr(periodEnd)}?\n\n`
+    + `All ${all.length} direct debit(s) go back to unpaid / auto-detect.\n`
+    + (overridden > 0
+        ? `${overridden} manual paid/paused override(s) will be cleared.\n\n`
+        : `No manual overrides are currently set.\n\n`)
+    + `Paid status is then read from your imported transactions, and you can still mark any DD paid by hand.`;
+
+  if(!confirm(msg)) return;
+
+  const cleared = await resetDDManualFlags();
+  await setDDPeriodMarker(periodStart);
+  await refreshAll();
+
+  const statusEl = document.getElementById('dd-period-status');
+  if(statusEl) statusEl.textContent = `Period ${periodStart} → ${dayBeforeStr(periodEnd)} · ${cleared} override(s) cleared`;
 }
 
 async function deleteDD(id){
@@ -5244,7 +5460,8 @@ async function saveSalaryDates(){
   
   // Save to settings
   await dbPut('settings', {key: 'salary_dates', value: JSON.stringify(dates)});
-  
+  invalidateSalaryDatesCache(); // new dates must take effect immediately
+
   msg.textContent = `✓ Saved ${dates.length} salary date${dates.length>1?'s':''}`;
   msg.style.color = 'var(--teal2)';
   
@@ -5359,14 +5576,34 @@ async function loadSalaryDates(){
   }
 }
 
+// Short-lived cache for salary dates. getSalaryDates() was doing a full dbGetAll on
+// the settings store on every call, and a single dashboard load calls it a dozen-plus
+// times (getPeriodRange, expectedPayday, classifyDDs, analytics all ask independently).
+//
+// Deliberately conservative: a 1.5s TTL bounds staleness even if some code path writes
+// salary_dates without calling the invalidator, and the known writers invalidate
+// explicitly. A copy is returned so no caller can mutate the cached array.
+let _salaryDatesCache = null;
+let _salaryDatesCacheAt = 0;
+const _SALARY_DATES_TTL_MS = 1500;
+
+function invalidateSalaryDatesCache(){
+  _salaryDatesCache = null;
+  _salaryDatesCacheAt = 0;
+}
+
 async function getSalaryDates(){
+  if(_salaryDatesCache && (Date.now() - _salaryDatesCacheAt) < _SALARY_DATES_TTL_MS){
+    return _salaryDatesCache.slice();
+  }
   try{
     const allSettings = await dbGetAll('settings');
     const setting = allSettings.find(s => s.key === 'salary_dates');
     if(setting && setting.value){
       const dates = JSON.parse(setting.value);
-      console.log('getSalaryDates() returning:', dates);
-      return dates;
+      _salaryDatesCache = dates;
+      _salaryDatesCacheAt = Date.now();
+      return dates.slice();
     }
   }catch(e){
     console.error('Error in getSalaryDates:', e);
@@ -5381,8 +5618,10 @@ async function getExpectedSalaryForPeriod(periodStart, periodEnd){
   const startStr = periodStart.toISOString().slice(0, 10);
   const endStr = periodEnd.toISOString().slice(0, 10);
   
-  // Find salary dates that fall within this period
-  const datesInPeriod = salaryDates.filter(d => d >= startStr && d <= endStr);
+  // Find salary dates that fall within this period.
+  // End is exclusive: <= also matched the NEXT period's salary date, since periodEnd
+  // IS that date, so every period reported two expected salaries.
+  const datesInPeriod = salaryDates.filter(d => d >= startStr && d < endStr);
   
   return datesInPeriod.length > 0 ? datesInPeriod : null;
 }
@@ -5396,8 +5635,9 @@ async function hasExpectedSalaryArrived(periodStart, periodEnd, transactions){
   const endStr = periodEnd.toISOString().slice(0, 10);
   
   const hasSalary = transactions.some(t => {
-    if(t.date < startStr || t.date > endStr) return false;
-    if(t.isInternal) return false;
+    // End exclusive, consistent with inPeriod() and classifyDDs.
+    if(t.date < startStr || t.date >= endStr) return false;
+    if(!_isIncomeCandidate(t)) return false;
     
     const amount = Math.abs(t.amount || 0);
     const desc = (t.description || '').toLowerCase();
@@ -5454,6 +5694,12 @@ async function loadSettingsValues(){
   const payday = expectedPayday(now.getFullYear(), now.getMonth());
   const paydayEl = document.getElementById('payday-input');
   if(paydayEl) paydayEl.value = payday;
+  // Grocery float settings
+  const gfEl = document.getElementById('grocery-float-input');
+  if(gfEl) gfEl.value = getGroceryFloatBudget() || '';
+  const gfkEl = document.getElementById('grocery-float-key-input');
+  if(gfkEl) gfkEl.value = getGroceryFloatKey();
+
   const autoLabel = document.getElementById('payday-auto-label');
   const stored = localStorage.getItem(`payday_${now.getFullYear()}_${String(now.getMonth()+1).padStart(2,'0')}`);
   if(autoLabel) autoLabel.textContent = stored
@@ -5501,6 +5747,36 @@ function filterDDTable(){
 // UNIFIED BACKUP / RESTORE
 // ═══════════════════════════════════════════════════
 
+// Single source of truth for which localStorage keys are portable between devices.
+// Used by BOTH exportBackup() (file download) and buildSyncPayload() (cloud sync).
+// These previously had separate lists and drifted: the backup path captured only
+// payday_/monthly_income/lm_endpoint, so downloaded backups omitted budget_cats and
+// restoring one wiped your budgets.
+//
+// bedrock_*        keeps the AI provider working after a restore/pull
+// income_detected_* keeps detected-salary state consistent
+// *_fix_v1/_manual_v1 stop the receiving device re-running categorisation
+//                  migrations independently and diverging on analytics
+const PORTABLE_SETTING_PREFIXES = [
+  'payday_','monthly_income','lm_endpoint','analytics_','budget_cats',
+  'gemini_','ai_provider','bedrock_','income_detected_','grocery_float'
+];
+const PORTABLE_SETTING_EXACT = ['mortgage_transfer_fix_v1','vpp_revo_manual_v1'];
+// Device-local plumbing must never travel — it would point the receiving device at
+// the wrong gist or overwrite its own credentials.
+const PORTABLE_SETTING_DENY = ['gist_token','gist_id','gist_last_sync'];
+
+function collectPortableSettings(){
+  const out = {};
+  for(let i=0;i<localStorage.length;i++){
+    const k = localStorage.key(i);
+    if(!k || k.startsWith('jsonbin') || PORTABLE_SETTING_DENY.includes(k)) continue;
+    if(PORTABLE_SETTING_PREFIXES.some(p => k.startsWith(p)) || PORTABLE_SETTING_EXACT.includes(k))
+      out[k] = localStorage.getItem(k);
+  }
+  return out;
+}
+
 async function exportBackup(){
   const [dds, debts, rules, transferMaps, cats, savings] = await Promise.all([
     dbGetAll('directDebits'),
@@ -5511,14 +5787,11 @@ async function exportBackup(){
     dbGetAll('savings')
   ]);
 
-  // Gather localStorage settings
-  const settings = {};
-  for(let i=0;i<localStorage.length;i++){
-    const k=localStorage.key(i);
-    if(k && (k.startsWith('payday_')||k.startsWith('monthly_income')||k.startsWith('lm_endpoint'))){
-      settings[k]=localStorage.getItem(k);
-    }
-  }
+  // Gather localStorage settings. Uses the SAME allowlist as cloud sync — this used
+  // to be its own narrower list (payday_/monthly_income/lm_endpoint only), so exported
+  // backups silently dropped budget_cats, analytics_*, bedrock_* and the migration
+  // guards. Restoring such a backup lost your budgets.
+  const settings = collectPortableSettings();
 
   // Gather IndexedDB balance settings
   const dbSettings = await dbGetAll('settings');
@@ -5573,16 +5846,24 @@ async function applyBackupPayload(payload){
   if(Array.isArray(payload.directDebits)){
     const existing=await dbGetAll('directDebits');
     const existingMap=new Map(existing.map(d=>[d.detectedKey,d]));
+    // Fallback identity for DDs whose detectedKey is device-specific. Manual DDs are
+    // keyed `manual_${Date.now()}`, so the same DD entered on two devices has two
+    // different keys and used to duplicate on every pull instead of merging.
+    const ddSig = d => `${(d.name||'').trim().toLowerCase()}|${Math.round((d.amount||0)*100)}|${d.dayOfMonth||''}`;
+    const existingBySig=new Map(existing.map(d=>[ddSig(d),d]));
     for(const dd of payload.directDebits){
-      if(!dd.detectedKey) continue;
-      const rec=existingMap.get(dd.detectedKey);
+      // Match on detectedKey first, then fall back to content signature. A DD with no
+      // key at all used to be skipped outright and never synced.
+      const rec=(dd.detectedKey && existingMap.get(dd.detectedKey)) || existingBySig.get(ddSig(dd));
       if(rec){
-        // Update existing record — honour _deleted, _paused, _manualPaid from source
-        await dbPut('directDebits',{...rec,...dd,_userEdited:true});
+        // Update existing record — honour _deleted, _paused, _manualPaid from source.
+        // Keep the local detectedKey: paid-detection matches it against this device's
+        // transaction descriptions, so overwriting it with a foreign key breaks matching.
+        await dbPut('directDebits',{...rec,...dd,detectedKey:rec.detectedKey,_userEdited:true});
       } else if(!dd._deleted){
         // Only add if the source device hasn't deleted it
         if(dd.name&&dd.amount&&dd.dayOfMonth)
-          await dbAdd('directDebits',{...dd,_userEdited:true});
+          await dbAdd('directDebits',{...dd,detectedKey:dd.detectedKey||`sync_${ddSig(dd)}`,_userEdited:true});
       }
       ddCount++;
     }
@@ -5631,6 +5912,8 @@ async function applyBackupPayload(payload){
   if(payload.balances){
     for(const [k,v] of Object.entries(payload.balances))
       await dbPut('settings',{key:k,value:v});
+    // A restore/pull can replace salary_dates — drop the cache before anything reads it.
+    invalidateSalaryDatesCache();
   }
 
   await refreshAll();
@@ -5941,9 +6224,23 @@ function inPeriod(dateStr, range){
   return d >= s && d < e;
 }
 
+// Last day that actually belongs to the period. periodEnd is the NEXT salary date and
+// is exclusive everywhere it is used for filtering (t.date < periodEnd), so displaying
+// it raw made the period look a day long and overlap the next one.
+function periodLastDay(range){
+  return new Date(range.periodEnd.getTime() - 86400000);
+}
+
+// Same idea for a YYYY-MM-DD string.
+function dayBeforeStr(dateStr){
+  const d = new Date(String(dateStr).slice(0,10) + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0,10);
+}
+
 function periodLabel(range){
   const fmt = d => d.toLocaleDateString('en-IE',{day:'numeric',month:'short',year:'numeric'});
-  return fmt(range.periodStart) + ' – ' + fmt(range.periodEnd);
+  return fmt(range.periodStart) + ' – ' + fmt(periodLastDay(range));
 }
 
 function spendByCat(txns, range){
@@ -6384,13 +6681,17 @@ function renderDailyHeatmap(txns, range){
   const el = document.getElementById('analytics-daily');
   if(!el) return;
   const dayMap = {};
-  txns.filter(t=>!t.isInternal&&!t.isCredit&&inPeriod(t.date,range)).forEach(t=>{
+  // Must honour _excludeAnalysis to match spendByCat/Total spend. Without it an
+  // excluded one-off (e.g. a €475.30 holiday booking) still showed in its daily cell
+  // while being absent from Total spend, so the cells never summed to the total.
+  txns.filter(t=>!t.isInternal&&!t.isCredit&&!t._excludeAnalysis&&inPeriod(t.date,range)).forEach(t=>{
     const d=String(t.date).slice(0,10);
     dayMap[d]=(dayMap[d]||0)+(t.amount||0);
   });
   const days=[];
   const cur=new Date(range.periodStart);
-  while(cur<=range.periodEnd){days.push(cur.toISOString().slice(0,10));cur.setUTCDate(cur.getUTCDate()+1);}
+  // periodEnd is exclusive — <= rendered one extra cell belonging to the next period.
+  while(cur<range.periodEnd){days.push(cur.toISOString().slice(0,10));cur.setUTCDate(cur.getUTCDate()+1);}
   const maxV=Math.max(...Object.values(dayMap),1);
   const today=new Date().toISOString().slice(0,10);
   el.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:3px;">'
@@ -7599,13 +7900,23 @@ async function gistSync(direction){
       const meta = await buildSyncPayload();
       const txns = await dbGetAll('transactions');
 
-      // Deduplicate transactions by content key before serialising
+      // Deduplicate transactions by content key before serialising.
+      // Preserve every field except the IndexedDB autoIncrement id (device-local,
+      // meaningless on the receiving device). Previously this rebuilt each record
+      // from a 7-field allowlist, which silently dropped the user-set flags
+      // (_excludeAnalysis, _reimbursement, _note) that all period figures depend on.
       const txnMap = new Map();
-      for(const t of txns) txnMap.set(txnKey(t), {
-        date:t.date||'', description:t.description||'', amount:t.amount||0,
-        isCredit:t.isCredit||false, isInternal:t.isInternal||false,
-        category:t.category||'Unknown', bank:t.bank||''
-      });
+      for(const t of txns){
+        const { id, ...rest } = t;
+        txnMap.set(txnKey(t), {
+          ...rest,
+          date:t.date||'', description:t.description||'', amount:t.amount||0,
+          isCredit:t.isCredit||false, isInternal:t.isInternal||false,
+          category:t.category||'Unknown', bank:t.bank||'',
+          _reimbursement:  !!t._reimbursement,
+          _excludeAnalysis:!!t._excludeAnalysis
+        });
+      }
       const txnArr = [...txnMap.values()];
 
       const files = {
@@ -7663,32 +7974,57 @@ async function gistSync(direction){
       const pushedAt = (meta.exportedAt||'').slice(0,19).replace('T',' ') || '?';
       const from     = meta.syncedFrom || 'another device';
 
-      if(!confirm(`Pull data pushed at ${pushedAt} from ${from}?\n\nMerges settings, DDs, debts, rules + transactions.\nYour local transactions are preserved.`)){
+      if(!confirm(`Pull data pushed at ${pushedAt} from ${from}?\n\nMerges settings, DDs, debts, rules + transactions.\nTransactions only on this device are kept.\nWhere both devices have the same transaction, the pushed version wins — including category, notes, reimbursement and exclude flags.`)){
         setSyncStatus('Pull cancelled', 'var(--text3)');
         return;
       }
 
-      // Apply settings/DDs/debts/rules/categories
-      await applyBackupPayload(meta);
+      // Income and settings are about to be restored from the pushing device.
+      // Suppress payroll auto-detection for the whole pull (applyBackupPayload
+      // calls refreshAll internally), otherwise the freshly synced monthly_income
+      // is immediately overwritten by a value re-derived from local transactions.
+      let added = 0, updated = 0;
+      _skipIncomeAutoDetect = true;
+      try{
+        // Apply settings/DDs/debts/rules/categories
+        await applyBackupPayload(meta);
 
-      // Merge transactions — add only what isn't already local
-      const txnsFile = gist.files['vault_transactions.json'];
-      if(txnsFile){
-        const remoteTxns = await _syncDecrypt(await _gistFileContent(txnsFile));
-        if(remoteTxns.length > 0){
-          const localTxns = await dbGetAll('transactions');
-          const localKeys = new Set(localTxns.map(t => txnKey(t)));
-          let added = 0;
-          for(const t of remoteTxns){
-            if(!localKeys.has(txnKey(t))){ await dbAdd('transactions', t); added++; }
+        // Merge transactions — insert new ones, update ones that already exist
+        const txnsFile = gist.files['vault_transactions.json'];
+        if(txnsFile){
+          const remoteTxns = await _syncDecrypt(await _gistFileContent(txnsFile));
+          if(remoteTxns.length > 0){
+            const localTxns  = await dbGetAll('transactions');
+            const localByKey = new Map(localTxns.map(t => [txnKey(t), t]));
+            for(const t of remoteTxns){
+              const { id:_remoteId, ...remote } = t;
+              const local = localByKey.get(txnKey(t));
+              if(!local){
+                await dbAdd('transactions', remote);
+                added++;
+              } else {
+                // Transaction exists on both devices — remote wins on field values so
+                // flag changes (_excludeAnalysis / _reimbursement / _note / category)
+                // actually propagate. Previously matched rows were skipped entirely,
+                // so edits made on the pushing device never reached this one.
+                const merged = { ...local, ...remote, id: local.id };
+                if(JSON.stringify(merged) !== JSON.stringify(local)){
+                  await dbPut('transactions', merged);
+                  updated++;
+                }
+              }
+            }
           }
-          if(added > 0) await refreshAll();
         }
+
+        if(added > 0 || updated > 0) await refreshAll();
+      } finally {
+        _skipIncomeAutoDetect = false;
       }
 
       const ts = new Date().toLocaleTimeString('en-IE',{hour:'2-digit',minute:'2-digit'});
       localStorage.setItem('gist_last_sync', new Date().toISOString());
-      setSyncStatus(`Pulled ✓ at ${ts} from ${from}`, 'var(--teal2)');
+      setSyncStatus(`Pulled ✓ at ${ts} from ${from} · +${added} new, ${updated} updated`, 'var(--teal2)');
     }
   }catch(err){
     console.error('Gist sync error:', err);
@@ -7728,16 +8064,11 @@ function buildSyncPayload(){
       dbGetAll('categories'),
       dbGetAll('savings')
     ]);
-    const settings = {};
-    for(let i=0;i<localStorage.length;i++){
-      const k=localStorage.key(i);
-      if(k && !k.startsWith('jsonbin') && (
-        k.startsWith('payday_')||k.startsWith('monthly_income')||
-        k.startsWith('lm_endpoint')||k.startsWith('analytics_')||
-        k.startsWith('budget_cats')||k.startsWith('gemini_')||
-        k.startsWith('ai_provider')
-      )) settings[k]=localStorage.getItem(k);
-    }
+    // Keys carried across devices. bedrock_* keeps the AI provider working after a
+    // pull; income_detected_* keeps the detected-salary state consistent; the
+    // *_fix_v1/*_manual_v1 guards stop the receiving device re-running those
+    // categorisation migrations independently and diverging on analytics.
+    const settings = collectPortableSettings();
     const dbSettings = await dbGetAll('settings');
     const balances = {};
     for(const s of dbSettings) balances[s.key]=s.value;
